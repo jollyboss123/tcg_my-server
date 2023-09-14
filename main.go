@@ -1,9 +1,9 @@
 package main
 
-import "tcg_my/PriceFinder"
+import "tcg_my/pricefinder"
 
 func main() {
-	finder := PriceFinder.NewBigWebPriceFinder()
+	finder := pricefinder.NewBigWebPriceFinder()
 	finder.FindPrices("ユニオン・キャリアー")
 	//fmt.Println("starting")
 	//// initializing the slice of structs to store the data to scrape

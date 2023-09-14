@@ -1,4 +1,4 @@
-package PriceFinder
+package pricefinder
 
 import (
 	"encoding/json"
