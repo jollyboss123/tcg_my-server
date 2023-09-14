@@ -1,0 +1,8 @@
+*.iml
+certs
+.idea
+bin
+.data
+.env
+sqlboiler.toml
+tmp
