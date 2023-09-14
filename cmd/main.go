@@ -1,12 +1,12 @@
 package main
 
-import "tcg_my/pkg/pricefinder"
+import "tcg_my/pkg/source"
 
 func main() {
-	finder := pricefinder.NewBigWebPriceFinder()
-	finder.FindPrices("DBVS-JP010")
-	finder2 := pricefinder.NewYuyuteiPriceFinder()
-	finder2.FindPrices("AC03-JP006")
+	finder := source.NewBigWeb()
+	finder.Scrape("DBVS-JP010")
+	finder2 := source.NewYYT()
+	finder2.Scrape("AC03-JP006")
 
 	select {}
 }
