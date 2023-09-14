@@ -1,6 +1,6 @@
 package main
 
-import "tcg_my/pkg/source"
+import "github.com/jollyboss123/tcg_my-server/pkg/source"
 
 func main() {
 	finder := source.NewBigWeb()
