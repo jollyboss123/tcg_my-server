@@ -43,12 +43,12 @@ func (y *YYT) Scrape(code string) (CardInfo, error) {
 	ch := make(chan error)
 	defer func() { ch <- nil }()
 
-	c.OnHTML("div[id=card-list3]", func(e *colly.HTMLElement) {
+	c.OnHTML("div[code=card-list3]", func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
-		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
+		e.ForEach("div[code=card-lits]", func(_ int, el *colly.HTMLElement) {
 			card := Card{}
 
-			card.id = substring(e.ChildText("span"), 2)
+			card.code = substring(e.ChildText("span"), 2)
 			card.price, err = strconv.ParseInt(extractNumbers(e.ChildText("strong")), 16, 64)
 			if err != nil {
 				ch <- err
@@ -56,7 +56,7 @@ func (y *YYT) Scrape(code string) (CardInfo, error) {
 			card.rarity = rarity
 
 			cardInfo.cards = append(cardInfo.cards, card)
-			fmt.Printf("name: %s rarity: %s price: %d\n", card.id, card.rarity, card.price)
+			fmt.Printf("name: %s rarity: %s price: %d\n", card.code, card.rarity, card.price)
 		})
 	})
 

@@ -1,0 +1,8 @@
+type Card {
+    code: String!
+    name: String!
+    rarity: String!
+    condition: String
+    price: Int!
+    source: String!
+}

@@ -54,7 +54,7 @@ func (f *BigWeb) Scrape(code string) (CardInfo, error) {
 		card := Card{}
 		info := rawCardInfo.(map[string]interface{})
 
-		card.id = info["fname"].(string)
+		card.code = info["fname"].(string)
 		card.rarity = info["rarity"].(map[string]interface{})["slip"].(string)
 		rawCondition := info["condition"].(map[string]interface{})["slip"].(string)
 		card.condition = "Scratch"
@@ -65,7 +65,7 @@ func (f *BigWeb) Scrape(code string) (CardInfo, error) {
 
 		cardInfo.cards = append(cardInfo.cards, card)
 
-		fmt.Printf("name: %s rarity: %s condition: %s price: %d\n", card.id, card.rarity, card.condition, card.price)
+		fmt.Printf("name: %s rarity: %s condition: %s price: %d\n", card.code, card.rarity, card.condition, card.price)
 	}
 
 	return cardInfo, nil
