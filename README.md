@@ -1,6 +1,5 @@
 # TCG.MY
-API for retrieving Yugioh OCG cards' price by scraping data from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
-Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY).
+Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). API for retrieving Yugioh OCG cards' price by scraping data from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
 
 ### Reference Documentation
 

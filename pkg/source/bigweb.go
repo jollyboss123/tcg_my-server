@@ -22,13 +22,18 @@ func NewBigWeb() *BigWeb {
 }
 
 func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
+	baseURL, err := url.Parse(f.endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	params := url.Values{}
 	params.Add("game_id", "9")
 	params.Add("Name", code)
-	u := f.endpoint + "?" + params.Encode()
+	baseURL.RawQuery = params.Encode()
 	c := make([]*Card, 0)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}

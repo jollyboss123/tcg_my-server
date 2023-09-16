@@ -96,7 +96,7 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 func processHTML(cs *[]*Card, errCh chan error) func(*colly.HTMLElement) {
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
-		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
+		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
 			var card Card
 			card.Code = el.ChildText("span")
 			price, err := strconv.ParseInt(extractNumbers(el.ChildText("strong")), 10, 64)
