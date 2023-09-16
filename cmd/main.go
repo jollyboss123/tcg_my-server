@@ -1,6 +1,8 @@
 package main
 
-import "github.com/jollyboss123/tcg_my-server/pkg/api"
+import (
+	"github.com/jollyboss123/tcg_my-server/pkg/api"
+)
 
 var Version = "v0.1.0"
 
@@ -10,7 +12,10 @@ func main() {
 	s.Run()
 
 	//finder := source.NewBigWeb()
-	//finder.List(context.Background(), "DBVS-JP010")
+	//_, err := finder.List(context.Background(), "DBVS-JP010")
 	//finder2 := source.NewYYT()
-	//finder2.List(context.Background(), "AC03-JP006")
+	//_, err := finder2.List(context.Background(), "AC03-JP006")
+	//if err != nil {
+	//	log.Println(err)
+	//}
 }

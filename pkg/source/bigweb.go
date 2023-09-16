@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -29,46 +28,70 @@ func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
 	u := f.endpoint + "?" + params.Encode()
 	c := make([]*Card, 0)
 
-	resp, err := http.Get(u)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return c, err
+		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Println("Error:", err)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			fmt.Println("Error:", cerr)
 		}
-	}(resp.Body)
+	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return c, errors.New("BigWeb API returns: " + string(rune(resp.StatusCode)))
+		return nil, errors.New("BigWeb API returns: " + resp.Status)
 	}
 
 	var data map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
-	rawCardInfos := data["items"].([]interface{})
+	rawCardInfos, ok := data["items"].([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected data format")
+	}
+
 	for _, rawCardInfo := range rawCardInfos {
 		card := Card{}
-		info := rawCardInfo.(map[string]interface{})
-
-		card.Code = info["fname"].(string)
-		card.Rarity = info["Rarity"].(map[string]interface{})["slip"].(string)
-		rawCondition := info["Condition"].(map[string]interface{})["slip"].(string)
-		card.Condition = "Scratch"
-		if rawCondition != "キズ" {
-			card.Condition = "Play"
+		info, ok := rawCardInfo.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("unexpected card data format")
 		}
-		card.Price = int64(info["Price"].(float64))
+
+		card.Code, _ = info["fname"].(string)
+		rarityMap, ok := info["Rarity"].(map[string]interface{})
+		if ok {
+			card.Rarity, _ = rarityMap["slip"].(string)
+		}
+		conditionMap, ok := info["Condition"].(map[string]interface{})
+		if ok {
+			rawCondition, _ := conditionMap["slip"].(string)
+			card.Condition = "Scratch"
+			if rawCondition != "キズ" {
+				card.Condition = "Play"
+			}
+		}
+		priceFloat, ok := info["Price"].(float64)
+		if ok {
+			card.Price = int64(priceFloat)
+		}
 
 		c = append(c, &card)
 
 		fmt.Printf("Name: %s Rarity: %s Condition: %s Price: %d\n", card.Code, card.Rarity, card.Condition, card.Price)
 	}
 
-	return c, nil
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		return c, nil
+	}
 }

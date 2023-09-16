@@ -25,7 +25,14 @@ func NewYYT() *YYT {
 }
 
 func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
-	u := y.endpoint + "?search_word=" + url.QueryEscape(code)
+	baseURL, err := url.Parse(y.endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	params := url.Values{}
+	params.Add("search_word", code)
+	baseURL.RawQuery = params.Encode()
 	cs := make([]*Card, 0)
 
 	c := colly.NewCollector(
@@ -34,7 +41,7 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 		colly.Async(true),
 	)
 
-	err := c.Limit(&colly.LimitRule{
+	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yuyu-tei.jp/*",
 		Delay:       1 * time.Second,
 		RandomDelay: 1 * time.Second,
@@ -43,61 +50,67 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 		return cs, err
 	}
 
-	var wg sync.WaitGroup
 	errCh := make(chan error, 1)
+	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", func(e *colly.HTMLElement) {
-		rarity := e.ChildText("h3 > span")
-		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
-			var card Card
+	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh))
 
-			card.Code = el.ChildText("span")
-			card.Price, err = strconv.ParseInt(extractNumbers(el.ChildText("strong")), 10, 64)
-			if err != nil {
-				errCh <- err
-			}
-			card.Rarity = rarity
-			card.Name = el.ChildText("a > h4")
-
-			cs = append(cs, &card)
-			fmt.Printf("Name: %s, Code: %s Rarity: %s Price: %d\n", card.Name, card.Code, card.Rarity, card.Price)
-		})
-	})
-
+	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
-		wg.Add(1)
+		mu.Lock()
+		numVisited++
+		mu.Unlock()
 		fmt.Println("visiting", r.URL.String())
 		if numVisited > 100 {
 			r.Abort()
 			errCh <- errors.New("request limit reached")
 		}
-		numVisited++
 	})
 
-	c.OnResponse(func(_ *colly.Response) {
-		wg.Done()
+	c.OnError(func(_ *colly.Response, err error) {
+		errCh <- err
 	})
 
-	wg.Add(1)
+	c.OnScraped(func(_ *colly.Response) {
+		done <- true
+	})
+
 	go func() {
-		defer wg.Done()
-		if err := c.Visit(u); err != nil {
+		err := c.Visit(baseURL.String())
+		if err != nil {
 			errCh <- err
 		}
 	}()
 
-	go func() {
-		wg.Wait()
-		close(errCh)
-	}()
-
-	if err := <-errCh; err != nil {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case err := <-errCh:
 		return nil, err
+	case <-done:
+		return cs, nil
 	}
+}
 
-	c.Wait()
-	return cs, nil
+func processHTML(cs *[]*Card, errCh chan error) func(*colly.HTMLElement) {
+	return func(e *colly.HTMLElement) {
+		rarity := e.ChildText("h3 > span")
+		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
+			var card Card
+			card.Code = el.ChildText("span")
+			price, err := strconv.ParseInt(extractNumbers(el.ChildText("strong")), 10, 64)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			card.Price = price
+			card.Rarity = rarity
+			card.Name = el.ChildText("a > h4")
+			*cs = append(*cs, &card)
+			fmt.Printf("Name: %s, Code: %s Rarity: %s Price: %d\n", card.Name, card.Code, card.Rarity, card.Price)
+		})
+	}
 }
 
 func extractNumbers(s string) string {

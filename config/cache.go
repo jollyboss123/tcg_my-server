@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/kelseyhightower/envconfig"
 	"strings"
 	"time"
-	"github.com/kelseyhightower/envconfig"
 )
 
 type Cache struct {
@@ -14,7 +14,7 @@ type Cache struct {
 	Name      int `default:"1"`
 	User      string
 	Pass      string
-	CacheTime time.Duration `split_words="true" default:"12h"`
+	CacheTime time.Duration `split_words:"true" default:"5m"`
 }
 
 func NewCache() Cache {
