@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jollyboss123/tcg_my-server/config"
 	redisLib "github.com/jollyboss123/tcg_my-server/pkg/redis"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ type Server struct {
 	Version string
 	cfg     *config.Config
 
-	cache *redisLib.Cache
+	cache *redis.Client
 
 	cors       *cors.Cors
 	router     *chi.Mux

@@ -53,12 +53,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cards func(childComplexity int, code string) int
+		Cards func(childComplexity int, query string) int
 	}
 }
 
 type QueryResolver interface {
-	Cards(ctx context.Context, code string) ([]*model.Card, error)
+	Cards(ctx context.Context, query string) ([]*model.Card, error)
 }
 
 type executableSchema struct {
@@ -128,7 +128,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Cards(childComplexity, args["code"].(string)), true
+		return e.complexity.Query.Cards(childComplexity, args["query"].(string)), true
 
 	}
 	return 0, false
@@ -229,7 +229,7 @@ var sources = []*ast.Source{
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/query.graphql", Input: `type Query {
-    cards(code: String!): [Card!]!
+    cards(query: String!): [Card!]!
 }
 `, BuiltIn: false},
 }
@@ -258,14 +258,14 @@ func (ec *executionContext) field_Query_cards_args(ctx context.Context, rawArgs 
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["code"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["code"] = arg0
+	args["query"] = arg0
 	return args, nil
 }
 
@@ -582,7 +582,7 @@ func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Cards(rctx, fc.Args["code"].(string))
+		return ec.resolvers.Query().Cards(rctx, fc.Args["query"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

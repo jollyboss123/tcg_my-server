@@ -87,6 +87,7 @@ func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
 		if ok {
 			card.Price = int64(priceFloat)
 		}
+		card.Source = f.source
 
 		c = append(c, &card)
 

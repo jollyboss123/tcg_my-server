@@ -15,8 +15,8 @@ func NewQueryResolver(s source.ScrapeService) resolver.QueryResolver {
 	return &queryResolver{scrape: s}
 }
 
-func (q queryResolver) Cards(ctx context.Context, code string) ([]*model.Card, error) {
-	cards, err := q.scrape.List(ctx, code)
+func (q queryResolver) Cards(ctx context.Context, query string) ([]*model.Card, error) {
+	cards, err := q.scrape.List(ctx, query)
 	if err != nil {
 		return nil, err
 	}

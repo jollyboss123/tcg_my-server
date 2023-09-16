@@ -2,6 +2,7 @@ package api
 
 import (
 	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
 	"net/http"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func (s *Server) InitRouter() {
-	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(), s.cache))
+	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(), s.cache, s.cfg))
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})
@@ -26,7 +27,7 @@ func (s *Server) InitRouter() {
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.FixedComplexityLimit(500))
 
-	gqlHandler.Use(extension.AutomaticPersistedQuery{Cache: s.cache})
+	gqlHandler.Use(extension.AutomaticPersistedQuery{Cache: lru.New(1000)})
 
 	s.router.Group(func(r chi.Router) {
 		handlerFunc := gqlplayground.Handler("GraphiQL Playground", "/query")

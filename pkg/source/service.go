@@ -3,7 +3,7 @@ package source
 import "context"
 
 type ScrapeService interface {
-	List(ctx context.Context, code string) ([]*Card, error)
+	List(ctx context.Context, query string) ([]*Card, error)
 }
 
 type Card struct {
@@ -12,9 +12,5 @@ type Card struct {
 	Rarity    string
 	Condition string
 	Price     int64
-}
-
-type CardInfo struct {
-	url   string
-	cards []Card
+	Source    string
 }

@@ -53,7 +53,7 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh))
+	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh, y.source))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -93,7 +93,7 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 	}
 }
 
-func processHTML(cs *[]*Card, errCh chan error) func(*colly.HTMLElement) {
+func processHTML(cs *[]*Card, errCh chan error, source string) func(*colly.HTMLElement) {
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
@@ -107,6 +107,7 @@ func processHTML(cs *[]*Card, errCh chan error) func(*colly.HTMLElement) {
 			card.Price = price
 			card.Rarity = rarity
 			card.Name = el.ChildText("a > h4")
+			card.Source = source
 			*cs = append(*cs, &card)
 			fmt.Printf("Name: %s, Code: %s Rarity: %s Price: %d\n", card.Name, card.Code, card.Rarity, card.Price)
 		})
