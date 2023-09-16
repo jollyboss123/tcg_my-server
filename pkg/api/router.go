@@ -13,7 +13,7 @@ import (
 )
 
 func (s *Server) InitRouter() {
-	executableSchemeConfig := newConfig(source.NewYYT())
+	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(), s.cache))
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})

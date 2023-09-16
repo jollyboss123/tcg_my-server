@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"time"
 )
 
@@ -21,6 +22,11 @@ func New(cfg config.Cache) *Cache {
 		Password: cfg.Pass,
 		DB:       cfg.Name,
 	})
+
+	err := client.Ping(context.Background()).Err()
+	if err != nil {
+		log.Fatalf("failed to connect with redis instance at %s - %v", cfg.Host, err)
+	}
 
 	return &Cache{client: client, ttl: cfg.CacheTime}
 }

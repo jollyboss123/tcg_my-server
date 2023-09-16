@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/jollyboss123/tcg_my-server/pkg/api"
-)
+import "github.com/jollyboss123/tcg_my-server/pkg/api"
 
 var Version = "v0.1.0"
 
