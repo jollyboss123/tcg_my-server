@@ -49,17 +49,18 @@ func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
 	c.OnHTML("div[id=card-list3]", func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
-			card := Card{}
+			var card Card
 
-			card.Code = substring(e.ChildText("span"), 2)
-			card.Price, err = strconv.ParseInt(extractNumbers(e.ChildText("strong")), 10, 64)
+			card.Code = el.ChildText("span")
+			card.Price, err = strconv.ParseInt(extractNumbers(el.ChildText("strong")), 10, 64)
 			if err != nil {
 				errCh <- err
 			}
 			card.Rarity = rarity
+			card.Name = el.ChildText("a > h4")
 
 			cs = append(cs, &card)
-			fmt.Printf("Name: %s Rarity: %s Price: %d\n", card.Code, card.Rarity, card.Price)
+			fmt.Printf("Name: %s, Code: %s Rarity: %s Price: %d\n", card.Name, card.Code, card.Rarity, card.Price)
 		})
 	})
 
@@ -107,8 +108,4 @@ func extractNumbers(s string) string {
 		}
 	}
 	return result
-}
-
-func substring(s string, from int) string {
-	return s[from:]
 }

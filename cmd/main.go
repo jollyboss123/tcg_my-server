@@ -12,9 +12,5 @@ func main() {
 	//finder := source.NewBigWeb()
 	//finder.List(context.Background(), "DBVS-JP010")
 	//finder2 := source.NewYYT()
-	//f, err := finder2.List(context.Background(), "AC03-JP006")
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//log.Println(f)
+	//finder2.List(context.Background(), "AC03-JP006")
 }
