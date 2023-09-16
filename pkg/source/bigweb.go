@@ -1,6 +1,7 @@
 package source
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,16 +22,17 @@ func NewBigWeb() *BigWeb {
 	}
 }
 
-func (f *BigWeb) Scrape(code string) (CardInfo, error) {
+func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
 	params := url.Values{}
 	params.Add("game_id", "9")
-	params.Add("name", code)
-	cardInfo := CardInfo{url: f.endpoint + "?" + params.Encode()}
+	params.Add("Name", code)
+	u := f.endpoint + "?" + params.Encode()
+	c := make([]*Card, 0)
 
-	resp, err := http.Get(cardInfo.url)
+	resp, err := http.Get(u)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return CardInfo{}, err
+		return c, err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -40,13 +42,13 @@ func (f *BigWeb) Scrape(code string) (CardInfo, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return CardInfo{}, errors.New("BigWeb API returns: " + string(rune(resp.StatusCode)))
+		return c, errors.New("BigWeb API returns: " + string(rune(resp.StatusCode)))
 	}
 
 	var data map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return CardInfo{}, err
+		return c, err
 	}
 
 	rawCardInfos := data["items"].([]interface{})
@@ -54,19 +56,19 @@ func (f *BigWeb) Scrape(code string) (CardInfo, error) {
 		card := Card{}
 		info := rawCardInfo.(map[string]interface{})
 
-		card.code = info["fname"].(string)
-		card.rarity = info["rarity"].(map[string]interface{})["slip"].(string)
-		rawCondition := info["condition"].(map[string]interface{})["slip"].(string)
-		card.condition = "Scratch"
+		card.Code = info["fname"].(string)
+		card.Rarity = info["Rarity"].(map[string]interface{})["slip"].(string)
+		rawCondition := info["Condition"].(map[string]interface{})["slip"].(string)
+		card.Condition = "Scratch"
 		if rawCondition != "キズ" {
-			card.condition = "Play"
+			card.Condition = "Play"
 		}
-		card.price = int64(info["price"].(float64))
+		card.Price = int64(info["Price"].(float64))
 
-		cardInfo.cards = append(cardInfo.cards, card)
+		c = append(c, &card)
 
-		fmt.Printf("name: %s rarity: %s condition: %s price: %d\n", card.code, card.rarity, card.condition, card.price)
+		fmt.Printf("Name: %s Rarity: %s Condition: %s Price: %d\n", card.Code, card.Rarity, card.Condition, card.Price)
 	}
 
-	return cardInfo, nil
+	return c, nil
 }

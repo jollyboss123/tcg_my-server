@@ -5,8 +5,16 @@ github.com/99designs/gqlgen/api
 github.com/99designs/gqlgen/codegen
 github.com/99designs/gqlgen/codegen/config
 github.com/99designs/gqlgen/codegen/templates
+github.com/99designs/gqlgen/complexity
 github.com/99designs/gqlgen/graphql
+github.com/99designs/gqlgen/graphql/errcode
+github.com/99designs/gqlgen/graphql/executor
+github.com/99designs/gqlgen/graphql/handler
+github.com/99designs/gqlgen/graphql/handler/extension
+github.com/99designs/gqlgen/graphql/handler/lru
+github.com/99designs/gqlgen/graphql/handler/transport
 github.com/99designs/gqlgen/graphql/introspection
+github.com/99designs/gqlgen/graphql/playground
 github.com/99designs/gqlgen/internal/code
 github.com/99designs/gqlgen/internal/imports
 github.com/99designs/gqlgen/internal/rewrite
@@ -70,6 +78,13 @@ github.com/golang/protobuf/proto
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
+# github.com/gorilla/websocket v1.5.0
+## explicit; go 1.12
+github.com/gorilla/websocket
+# github.com/hashicorp/golang-lru/v2 v2.0.3
+## explicit; go 1.18
+github.com/hashicorp/golang-lru/v2
+github.com/hashicorp/golang-lru/v2/simplelru
 # github.com/joho/godotenv v1.5.1
 ## explicit; go 1.12
 github.com/joho/godotenv
@@ -79,6 +94,9 @@ github.com/kelseyhightower/envconfig
 # github.com/kennygrant/sanitize v1.2.4
 ## explicit
 github.com/kennygrant/sanitize
+# github.com/mitchellh/mapstructure v1.5.0
+## explicit; go 1.14
+github.com/mitchellh/mapstructure
 # github.com/redis/go-redis/v9 v9.1.0
 ## explicit; go 1.18
 github.com/redis/go-redis/v9
@@ -89,6 +107,9 @@ github.com/redis/go-redis/v9/internal/pool
 github.com/redis/go-redis/v9/internal/proto
 github.com/redis/go-redis/v9/internal/rand
 github.com/redis/go-redis/v9/internal/util
+# github.com/rs/cors v1.10.0
+## explicit; go 1.13
+github.com/rs/cors
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
 github.com/russross/blackfriday/v2

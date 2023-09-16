@@ -1,11 +1,13 @@
 package source
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 	"unicode"
 )
@@ -22,8 +24,9 @@ func NewYYT() *YYT {
 	}
 }
 
-func (y *YYT) Scrape(code string) (CardInfo, error) {
-	cardInfo := CardInfo{url: y.endpoint + "?search_word=" + url.QueryEscape(code)}
+func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
+	u := y.endpoint + "?search_word=" + url.QueryEscape(code)
+	cs := make([]*Card, 0)
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("yuyu-tei.jp"),
@@ -37,50 +40,63 @@ func (y *YYT) Scrape(code string) (CardInfo, error) {
 		RandomDelay: 1 * time.Second,
 	})
 	if err != nil {
-		return CardInfo{}, err
+		return cs, err
 	}
 
-	ch := make(chan error)
-	defer func() { ch <- nil }()
+	var wg sync.WaitGroup
+	errCh := make(chan error, 1)
 
-	c.OnHTML("div[code=card-list3]", func(e *colly.HTMLElement) {
+	c.OnHTML("div[id=card-list3]", func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
-		e.ForEach("div[code=card-lits]", func(_ int, el *colly.HTMLElement) {
+		e.ForEach("div[id=card-lits]", func(_ int, el *colly.HTMLElement) {
 			card := Card{}
 
-			card.code = substring(e.ChildText("span"), 2)
-			card.price, err = strconv.ParseInt(extractNumbers(e.ChildText("strong")), 16, 64)
+			card.Code = substring(e.ChildText("span"), 2)
+			card.Price, err = strconv.ParseInt(extractNumbers(e.ChildText("strong")), 10, 64)
 			if err != nil {
-				ch <- err
+				errCh <- err
 			}
-			card.rarity = rarity
+			card.Rarity = rarity
 
-			cardInfo.cards = append(cardInfo.cards, card)
-			fmt.Printf("name: %s rarity: %s price: %d\n", card.code, card.rarity, card.price)
+			cs = append(cs, &card)
+			fmt.Printf("Name: %s Rarity: %s Price: %d\n", card.Code, card.Rarity, card.Price)
 		})
 	})
 
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
+		wg.Add(1)
 		fmt.Println("visiting", r.URL.String())
 		if numVisited > 100 {
 			r.Abort()
-			ch <- errors.New("request limit reached")
+			errCh <- errors.New("request limit reached")
 		}
 		numVisited++
 	})
 
-	err = c.Visit(cardInfo.url)
-	if err != nil {
-		return CardInfo{}, err
+	c.OnResponse(func(_ *colly.Response) {
+		wg.Done()
+	})
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := c.Visit(u); err != nil {
+			errCh <- err
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+
+	if err := <-errCh; err != nil {
+		return nil, err
 	}
 
-	result := <-ch
-	if result != nil {
-		return CardInfo{}, result
-	}
-
-	return cardInfo, nil
+	c.Wait()
+	return cs, nil
 }
 
 func extractNumbers(s string) string {

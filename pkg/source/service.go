@@ -1,15 +1,17 @@
 package source
 
-type Source interface {
-	Scrape(code string) (CardInfo, error)
+import "context"
+
+type ScrapeService interface {
+	List(ctx context.Context, code string) ([]*Card, error)
 }
 
 type Card struct {
-	code      string
-	name      string
-	rarity    string
-	condition string
-	price     int64
+	Code      string
+	Name      string
+	Rarity    string
+	Condition string
+	Price     int64
 }
 
 type CardInfo struct {
