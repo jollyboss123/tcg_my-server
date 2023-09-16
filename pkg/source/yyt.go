@@ -24,14 +24,14 @@ func NewYYT() *YYT {
 	}
 }
 
-func (y *YYT) List(ctx context.Context, code string) ([]*Card, error) {
+func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	baseURL, err := url.Parse(y.endpoint)
 	if err != nil {
 		return nil, err
 	}
 
 	params := url.Values{}
-	params.Add("search_word", code)
+	params.Add("search_word", query)
 	baseURL.RawQuery = params.Encode()
 	cs := make([]*Card, 0)
 

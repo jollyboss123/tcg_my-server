@@ -21,7 +21,7 @@ func NewBigWeb() *BigWeb {
 	}
 }
 
-func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
+func (f *BigWeb) List(ctx context.Context, query string) ([]*Card, error) {
 	baseURL, err := url.Parse(f.endpoint)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (f *BigWeb) List(ctx context.Context, code string) ([]*Card, error) {
 
 	params := url.Values{}
 	params.Add("game_id", "9")
-	params.Add("Name", code)
+	params.Add("Name", query)
 	baseURL.RawQuery = params.Encode()
 	c := make([]*Card, 0)
 
