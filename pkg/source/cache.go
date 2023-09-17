@@ -29,22 +29,49 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 
 func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) {
 	var cards []*Card
+	var mu sync.Mutex
+
 	patterns := []string{
 		fmt.Sprintf("*:%s", query),   // for code
 		fmt.Sprintf("*:%s:*", query), // for name
 	}
 
-	for _, pattern := range patterns {
-		cards, err := c.scan(ctx, pattern)
-		if err != nil {
-			c.logger.Error("redis scan", slog.String("error", err.Error()), slog.String("pattern", pattern))
-			return nil, err
-		}
+	wg := &sync.WaitGroup{}
+	wg.Add(len(patterns))
 
-		if len(cards) > 0 {
-			c.logger.Info("cache hit", slog.String("query", query), slog.String("pattern", pattern))
-			return cards, nil
-		}
+	errCh := make(chan error, len(patterns))
+
+	for _, pattern := range patterns {
+		go func(p string) {
+			defer wg.Done()
+
+			cs, err := c.scan(ctx, p)
+			if err != nil {
+				c.logger.Error("redis scan", slog.String("error", err.Error()), slog.String("pattern", p))
+				errCh <- err
+				return
+			}
+
+			if len(cs) <= 0 {
+				return
+			}
+
+			c.logger.Info("cache hit", slog.String("query", query), slog.String("pattern", p))
+			mu.Lock()
+			cards = append(cards, cs...)
+			mu.Unlock()
+		}(pattern)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	if len(errCh) > 0 {
+		return nil, <-errCh
+	}
+
+	if len(cards) > 0 {
+		return cards, nil
 	}
 
 	c.logger.Info("cache miss", slog.String("query", query))
