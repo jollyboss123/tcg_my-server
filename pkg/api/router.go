@@ -4,6 +4,7 @@ import (
 	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
+	"log/slog"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -13,8 +14,8 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 )
 
-func (s *Server) InitRouter() {
-	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(), s.cache, s.cfg))
+func (s *Server) InitRouter(logger *slog.Logger) {
+	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(logger), s.cache, s.cfg, logger))
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})

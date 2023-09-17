@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/joho/godotenv"
-	"log"
+	"log/slog"
 )
 
 type Config struct {
@@ -11,10 +11,10 @@ type Config struct {
 	Cors
 }
 
-func New() *Config {
+func New(logger *slog.Logger) *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println(err)
+		logger.Error("build config", slog.String("error", err.Error()))
 	}
 
 	return &Config{

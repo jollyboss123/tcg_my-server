@@ -3,8 +3,8 @@ package source
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gocolly/colly/v2"
+	"log/slog"
 	"net/url"
 	"strconv"
 	"sync"
@@ -15,18 +15,24 @@ import (
 type YYT struct {
 	endpoint string
 	source   string
+	logger   *slog.Logger
 }
 
-func NewYYT() *YYT {
+func NewYYT(logger *slog.Logger) *YYT {
+	child := logger.With(slog.String("api", "yyt"))
 	return &YYT{
 		endpoint: "https://yuyu-tei.jp/sell/ygo/s/search",
 		source:   "Yuyu-tei",
+		logger:   child,
 	}
 }
+
+var ErrExceedRequestLimit = errors.New("request limit reached")
 
 func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	baseURL, err := url.Parse(y.endpoint)
 	if err != nil {
+		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", y.endpoint))
 		return nil, err
 	}
 
@@ -47,13 +53,14 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 		RandomDelay: 1 * time.Second,
 	})
 	if err != nil {
+		y.logger.Error("colly limit rule", slog.String("error", err.Error()))
 		return cs, err
 	}
 
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh, y.source))
+	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh, y.source, y.logger))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -61,30 +68,35 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 		mu.Lock()
 		numVisited++
 		mu.Unlock()
-		fmt.Println("visiting", r.URL.String())
+		y.logger.Info("scraping start", slog.String("url", r.URL.String()))
 		if numVisited > 100 {
 			r.Abort()
-			errCh <- errors.New("request limit reached")
+			y.logger.Error("scraping start", slog.String("error", ErrExceedRequestLimit.Error()), slog.String("url", baseURL.String()))
+			errCh <- ErrExceedRequestLimit
 		}
 	})
 
-	c.OnError(func(_ *colly.Response, err error) {
+	c.OnError(func(r *colly.Response, err error) {
+		y.logger.Error("scraping error", slog.String("error", err.Error()), slog.String("url", r.Request.URL.String()))
 		errCh <- err
 	})
 
-	c.OnScraped(func(_ *colly.Response) {
+	c.OnScraped(func(r *colly.Response) {
+		y.logger.Info("scraping done", slog.String("url", r.Request.URL.String()))
 		done <- true
 	})
 
 	go func() {
 		err := c.Visit(baseURL.String())
 		if err != nil {
+			y.logger.Error("scraping start", slog.String("error", err.Error()), slog.String("url", baseURL.String()))
 			errCh <- err
 		}
 	}()
 
 	select {
 	case <-ctx.Done():
+		y.logger.Error("context done", slog.String("error", ctx.Err().Error()), slog.String("url", baseURL.String()))
 		return nil, ctx.Err()
 	case err := <-errCh:
 		return nil, err
@@ -93,7 +105,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	}
 }
 
-func processHTML(cs *[]*Card, errCh chan error, source string) func(*colly.HTMLElement) {
+func processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
@@ -109,7 +121,12 @@ func processHTML(cs *[]*Card, errCh chan error, source string) func(*colly.HTMLE
 			card.Name = el.ChildText("a > h4")
 			card.Source = source
 			*cs = append(*cs, &card)
-			fmt.Printf("Name: %s, Code: %s Rarity: %s Price: %d\n", card.Name, card.Code, card.Rarity, card.Price)
+
+			logger.Info("card info", slog.String("name", card.Name),
+				slog.String("code", card.Code),
+				slog.String("rarity", card.Rarity),
+				slog.String("condition", card.Condition),
+				slog.Int64("price", card.Price))
 		})
 	}
 }

@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/jollyboss123/tcg_my-server/config"
 	redisLib "github.com/jollyboss123/tcg_my-server/pkg/redis"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ import (
 
 type Server struct {
 	Version string
+	log     *slog.Logger
 	cfg     *config.Config
 
 	cache *redis.Client
@@ -34,7 +36,7 @@ func NewServer(opts ...Options) *Server {
 	for _, opt := range opts {
 		err := opt(s)
 		if err != nil {
-			log.Fatalln(err)
+			s.log.Error("build server", slog.String("error", err.Error()))
 		}
 	}
 	return s
@@ -42,16 +44,28 @@ func NewServer(opts ...Options) *Server {
 
 func WithVersion(version string) Options {
 	return func(opts *Server) error {
-		log.Printf("Starting API version: %s\n", version)
+		child := opts.log.With(
+			slog.String("version", version))
+		opts.log = child
 		opts.Version = version
 		return nil
 	}
 }
 
 func defaultServer() *Server {
+	logger := defaultLogger()
+
 	return &Server{
-		cfg: config.New(),
+		log: logger,
+		cfg: config.New(logger),
 	}
+}
+
+func defaultLogger() *slog.Logger {
+	handler := slog.NewJSONHandler(os.Stdout, nil)
+	logger := slog.New(handler)
+	return logger.With(
+		slog.String("app", "tcg.my"))
 }
 
 func (s *Server) Init() {
@@ -59,7 +73,7 @@ func (s *Server) Init() {
 	s.newRedis()
 	s.newRouter()
 	s.setGlobalMiddleware()
-	s.InitRouter()
+	s.InitRouter(s.log)
 }
 
 func (s *Server) setCors() {
@@ -81,7 +95,7 @@ func (s *Server) newRedis() {
 		return
 	}
 
-	s.cache = redisLib.New(s.cfg.Cache)
+	s.cache = redisLib.New(s.cfg.Cache, s.log)
 }
 
 func (s *Server) newRouter() {
@@ -103,10 +117,13 @@ func (s *Server) Run() {
 }
 
 func start(s *Server) {
-	log.Printf("Serving at %s:%s\n", s.cfg.Api.Host, s.cfg.Api.Port)
+	s.log.LogAttrs(context.Background(),
+		slog.LevelInfo,
+		"server started",
+		slog.String("address", fmt.Sprintf("%s:%s", s.cfg.Api.Host, s.cfg.Api.Port)))
 	err := s.httpServer.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		s.log.Error("listen and serve", slog.String("error", err.Error()))
 	}
 }
 
@@ -116,14 +133,14 @@ func gracefulShutdown(ctx context.Context, s *Server) error {
 
 	<-quit
 
-	log.Println("Shutting down...")
+	s.log.Log(ctx, slog.LevelInfo, "shutting down")
 
 	ctx, shutdown := context.WithTimeout(ctx, s.cfg.Api.GracefulTimeout*time.Second)
 	defer shutdown()
 
 	err := s.httpServer.Shutdown(ctx)
 	if err != nil {
-		log.Println(err)
+		s.log.Warn("server shutdown", slog.String("error", err.Error()))
 	}
 	s.closeResources(ctx)
 

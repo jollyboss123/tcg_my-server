@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/redis/go-redis/v9"
-	"log"
+	"log/slog"
 )
 
-func New(cfg config.Cache) *redis.Client {
+func New(cfg config.Cache, logger *slog.Logger) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Pass,
@@ -17,7 +17,8 @@ func New(cfg config.Cache) *redis.Client {
 
 	err := client.Ping(context.Background()).Err()
 	if err != nil {
-		log.Fatalf("failed to connect with redis instance at %s - %v", cfg.Host, err)
+		logger.Error("failed to connect with redis instance", slog.String("redis host", cfg.Host),
+			slog.String("reason", err.Error()))
 	}
 
 	return client

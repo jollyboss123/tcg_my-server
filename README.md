@@ -5,12 +5,12 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). API for retrieving Y
 1. web scraping with [go-colly](https://github.com/gocolly/colly)
 2. graphql http caching with [apq](https://www.apollographql.com/docs/resources/graphql-glossary/#automatic-persisted-queries-apq) and lru cache
 3. graphql response caching with redis
+4. structured logging with slog
 
 ### Todo
 - [ ] data loading with graphql
 - [ ] currency conversion query
 - [ ] jwt authentication on APIs
-- [ ] structured logging with slog
 
 ### Reference Documentation
 
