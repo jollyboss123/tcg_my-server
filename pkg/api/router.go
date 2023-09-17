@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) InitRouter(logger *slog.Logger) {
-	executableSchemeConfig := newConfig(source.NewCachedScrapeService(source.NewYYT(logger), s.cache, s.cfg, logger))
+	executableSchemeConfig := newConfig(source.NewCachedScrapeService(s.cache, s.cfg, logger, source.NewYYT(logger), source.NewBigWeb(logger)))
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})

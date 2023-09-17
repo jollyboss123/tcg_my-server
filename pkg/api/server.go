@@ -95,7 +95,11 @@ func (s *Server) newRedis() {
 		return
 	}
 
-	s.cache = redisLib.New(s.cfg.Cache, s.log)
+	client, err := redisLib.New(s.cfg.Cache, s.log)
+	if err != nil {
+		return
+	}
+	s.cache = client
 }
 
 func (s *Server) newRouter() {

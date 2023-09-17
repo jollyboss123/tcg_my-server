@@ -8,7 +8,7 @@ import (
 	"log/slog"
 )
 
-func New(cfg config.Cache, logger *slog.Logger) *redis.Client {
+func New(cfg config.Cache, logger *slog.Logger) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Pass,
@@ -19,7 +19,8 @@ func New(cfg config.Cache, logger *slog.Logger) *redis.Client {
 	if err != nil {
 		logger.Error("failed to connect with redis instance", slog.String("redis host", cfg.Host),
 			slog.String("reason", err.Error()))
+		return nil, err
 	}
 
-	return client
+	return client, nil
 }

@@ -7,22 +7,23 @@ import (
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
+	"sync"
 )
 
 type CachedSource struct {
-	service ScrapeService
-	cache   *redis.Client
-	cfg     *config.Config
-	logger  *slog.Logger
+	services []ScrapeService
+	cache    *redis.Client
+	cfg      *config.Config
+	logger   *slog.Logger
 }
 
-func NewCachedScrapeService(service ScrapeService, cache *redis.Client, cfg *config.Config, logger *slog.Logger) *CachedSource {
+func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, service ...ScrapeService) *CachedSource {
 	child := logger.With(slog.String("api", "cached-scrape"))
 	return &CachedSource{
-		service: service,
-		cache:   cache,
-		cfg:     cfg,
-		logger:  child,
+		services: service,
+		cache:    cache,
+		cfg:      cfg,
+		logger:   child,
 	}
 }
 
@@ -57,11 +58,35 @@ func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) 
 }
 
 func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card, error) {
-	cards, err := c.service.List(ctx, query)
-	if err != nil {
-		c.logger.Error("list card", slog.String("error", err.Error()), slog.String("query", query))
-		return nil, err
+	var cards []*Card
+	var mu sync.Mutex
+
+	wg := &sync.WaitGroup{}
+	wg.Add(len(c.services))
+
+	for _, service := range c.services {
+		go func(s ScrapeService) {
+			defer wg.Done()
+
+			cs, err := s.List(ctx, query)
+			if err != nil {
+				c.logger.Error("list card", slog.String("error", err.Error()), slog.String("query", query))
+				return
+			}
+
+			mu.Lock()
+			cards = append(cards, cs...)
+			mu.Unlock()
+		}(service)
 	}
+
+	wg.Wait()
+
+	if len(cards) == 0 {
+		c.logger.Info("no cards found", slog.String("query", query))
+		return cards, nil
+	}
+
 	for _, card := range cards {
 		cacheKey := fmt.Sprintf("%s:%s:%s", card.Rarity, card.Name, card.Code)
 		cacheEntry, err := json.Marshal(card)
@@ -71,7 +96,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 		}
 		err = c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime).Err()
 		if err != nil {
-			return c.service.List(ctx, query)
+			return cards, nil
 		}
 	}
 	return cards, nil
