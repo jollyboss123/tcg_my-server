@@ -13,4 +13,5 @@ type Card struct {
 	Condition string
 	Price     int64
 	Source    string
+	Currency  string
 }

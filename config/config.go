@@ -9,6 +9,7 @@ type Config struct {
 	Api
 	Cache
 	Cors
+	Rates
 }
 
 func New(logger *slog.Logger) *Config {
@@ -21,5 +22,6 @@ func New(logger *slog.Logger) *Config {
 		Api:   API(),
 		Cache: NewCache(),
 		Cors:  NewCors(),
+		Rates: NewRates(),
 	}
 }

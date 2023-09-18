@@ -73,7 +73,7 @@ func (s *Server) Init() {
 	s.newRedis()
 	s.newRouter()
 	s.setGlobalMiddleware()
-	s.InitRouter(s.log)
+	s.InitRouter()
 }
 
 func (s *Server) setCors() {

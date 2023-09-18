@@ -4,7 +4,8 @@ import (
 	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
-	"log/slog"
+	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -14,8 +15,8 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 )
 
-func (s *Server) InitRouter(logger *slog.Logger) {
-	executableSchemeConfig := newConfig(source.NewCachedScrapeService(s.cache, s.cfg, logger, source.NewYYT(logger), source.NewBigWeb(logger)))
+func (s *Server) InitRouter() {
+	executableSchemeConfig := newConfig(s.scrapeService(), s.currencyService(), s.rateService())
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})
@@ -40,4 +41,28 @@ func (s *Server) InitRouter(logger *slog.Logger) {
 		r.Handle("/query", gqlHandler)
 		r.Handle("/api/query", gqlHandler)
 	})
+}
+
+func (s *Server) scrapeService() source.ScrapeService {
+	return source.NewCachedScrapeService(
+		s.cache,
+		s.cfg,
+		s.log,
+		source.NewYYT(s.log),
+		source.NewBigWeb(s.log),
+	)
+}
+
+func (s *Server) currencyService() currency.Service {
+	return currency.NewService(s.log)
+}
+
+func (s *Server) rateService() rate.Service {
+	return rate.NewCachedExchangeRate(
+		rate.NewService(s.log, s.cfg, s.currencyService()),
+		s.cache,
+		s.cfg,
+		s.log,
+		s.currencyService(),
+	)
 }

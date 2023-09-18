@@ -74,7 +74,7 @@ func (b *BigWeb) List(ctx context.Context, query string) ([]*Card, error) {
 
 	rawCardInfos, ok := data["items"].([]interface{})
 	if !ok {
-		b.logger.Error("convert items", slog.String("error", err.Error()))
+		b.logger.Error("convert raw json items", slog.String("error", err.Error()))
 		return nil, ErrDataFormat
 	}
 

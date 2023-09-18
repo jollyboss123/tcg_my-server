@@ -12,7 +12,8 @@ func ToCard(card *source.Card) *Card {
 		Rarity:    card.Rarity,
 		Condition: &card.Condition,
 		Price:     int(card.Price),
-		Source:    "yyt",
+		Source:    card.Source,
+		Currency:  card.Currency,
 	}
 }
 

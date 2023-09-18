@@ -1,0 +1,9 @@
+type Currency {
+    code: String!
+    numericCode: String!
+    fraction: Int!
+    grapheme: String!
+    template: String!
+    decimal: String!
+    thousand: String!
+}

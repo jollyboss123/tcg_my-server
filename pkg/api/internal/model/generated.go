@@ -9,4 +9,21 @@ type Card struct {
 	Condition *string `json:"condition,omitempty"`
 	Price     int     `json:"price"`
 	Source    string  `json:"source"`
+	Currency  string  `json:"currency"`
+}
+
+type Currency struct {
+	Code        string `json:"code"`
+	NumericCode string `json:"numericCode"`
+	Fraction    int    `json:"fraction"`
+	Grapheme    string `json:"grapheme"`
+	Template    string `json:"template"`
+	Decimal     string `json:"decimal"`
+	Thousand    string `json:"thousand"`
+}
+
+type ExchangeRate struct {
+	From *Currency `json:"from"`
+	To   *Currency `json:"to"`
+	Rate float64   `json:"rate"`
 }

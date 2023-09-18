@@ -4,15 +4,23 @@ import (
 	"context"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/model"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/resolver"
+	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 )
 
 type queryResolver struct {
-	scrape source.ScrapeService
+	scrape   source.ScrapeService
+	currency currency.Service
+	rate     rate.Service
 }
 
-func NewQueryResolver(s source.ScrapeService) resolver.QueryResolver {
-	return &queryResolver{scrape: s}
+func NewQueryResolver(s source.ScrapeService, c currency.Service, r rate.Service) resolver.QueryResolver {
+	return &queryResolver{
+		scrape:   s,
+		currency: c,
+		rate:     r,
+	}
 }
 
 func (q queryResolver) Cards(ctx context.Context, query string) ([]*model.Card, error) {
@@ -21,4 +29,28 @@ func (q queryResolver) Cards(ctx context.Context, query string) ([]*model.Card, 
 		return nil, err
 	}
 	return model.ToCards(cards), nil
+}
+
+func (q queryResolver) Currency(ctx context.Context, code string) (*model.Currency, error) {
+	c, err := q.currency.Fetch(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return model.ToCurrency(c), nil
+}
+
+func (q queryResolver) ExchangeRate(ctx context.Context, base, to string) (*model.ExchangeRate, error) {
+	r, err := q.rate.Fetch(ctx, base, to)
+	if err != nil {
+		return nil, err
+	}
+	return model.ToRate(r), nil
+}
+
+func (q queryResolver) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error) {
+	rs, err := q.rate.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return model.ToRates(rs), nil
 }

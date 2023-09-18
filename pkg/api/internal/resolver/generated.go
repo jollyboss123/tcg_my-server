@@ -46,19 +46,42 @@ type ComplexityRoot struct {
 	Card struct {
 		Code      func(childComplexity int) int
 		Condition func(childComplexity int) int
+		Currency  func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Price     func(childComplexity int) int
 		Rarity    func(childComplexity int) int
 		Source    func(childComplexity int) int
 	}
 
+	Currency struct {
+		Code        func(childComplexity int) int
+		Decimal     func(childComplexity int) int
+		Fraction    func(childComplexity int) int
+		Grapheme    func(childComplexity int) int
+		NumericCode func(childComplexity int) int
+		Template    func(childComplexity int) int
+		Thousand    func(childComplexity int) int
+	}
+
+	ExchangeRate struct {
+		From func(childComplexity int) int
+		Rate func(childComplexity int) int
+		To   func(childComplexity int) int
+	}
+
 	Query struct {
-		Cards func(childComplexity int, query string) int
+		Cards         func(childComplexity int, query string) int
+		Currency      func(childComplexity int, code string) int
+		ExchangeRate  func(childComplexity int, base string, to string) int
+		ExchangeRates func(childComplexity int) int
 	}
 }
 
 type QueryResolver interface {
 	Cards(ctx context.Context, query string) ([]*model.Card, error)
+	Currency(ctx context.Context, code string) (*model.Currency, error)
+	ExchangeRate(ctx context.Context, base string, to string) (*model.ExchangeRate, error)
+	ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error)
 }
 
 type executableSchema struct {
@@ -90,6 +113,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Card.Condition(childComplexity), true
 
+	case "Card.currency":
+		if e.complexity.Card.Currency == nil {
+			break
+		}
+
+		return e.complexity.Card.Currency(childComplexity), true
+
 	case "Card.name":
 		if e.complexity.Card.Name == nil {
 			break
@@ -118,6 +148,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Card.Source(childComplexity), true
 
+	case "Currency.code":
+		if e.complexity.Currency.Code == nil {
+			break
+		}
+
+		return e.complexity.Currency.Code(childComplexity), true
+
+	case "Currency.decimal":
+		if e.complexity.Currency.Decimal == nil {
+			break
+		}
+
+		return e.complexity.Currency.Decimal(childComplexity), true
+
+	case "Currency.fraction":
+		if e.complexity.Currency.Fraction == nil {
+			break
+		}
+
+		return e.complexity.Currency.Fraction(childComplexity), true
+
+	case "Currency.grapheme":
+		if e.complexity.Currency.Grapheme == nil {
+			break
+		}
+
+		return e.complexity.Currency.Grapheme(childComplexity), true
+
+	case "Currency.numericCode":
+		if e.complexity.Currency.NumericCode == nil {
+			break
+		}
+
+		return e.complexity.Currency.NumericCode(childComplexity), true
+
+	case "Currency.template":
+		if e.complexity.Currency.Template == nil {
+			break
+		}
+
+		return e.complexity.Currency.Template(childComplexity), true
+
+	case "Currency.thousand":
+		if e.complexity.Currency.Thousand == nil {
+			break
+		}
+
+		return e.complexity.Currency.Thousand(childComplexity), true
+
+	case "ExchangeRate.from":
+		if e.complexity.ExchangeRate.From == nil {
+			break
+		}
+
+		return e.complexity.ExchangeRate.From(childComplexity), true
+
+	case "ExchangeRate.rate":
+		if e.complexity.ExchangeRate.Rate == nil {
+			break
+		}
+
+		return e.complexity.ExchangeRate.Rate(childComplexity), true
+
+	case "ExchangeRate.to":
+		if e.complexity.ExchangeRate.To == nil {
+			break
+		}
+
+		return e.complexity.ExchangeRate.To(childComplexity), true
+
 	case "Query.cards":
 		if e.complexity.Query.Cards == nil {
 			break
@@ -129,6 +229,37 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Cards(childComplexity, args["query"].(string)), true
+
+	case "Query.currency":
+		if e.complexity.Query.Currency == nil {
+			break
+		}
+
+		args, err := ec.field_Query_currency_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Currency(childComplexity, args["code"].(string)), true
+
+	case "Query.exchangeRate":
+		if e.complexity.Query.ExchangeRate == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exchangeRate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ExchangeRate(childComplexity, args["base"].(string), args["to"].(string)), true
+
+	case "Query.exchangeRates":
+		if e.complexity.Query.ExchangeRates == nil {
+			break
+		}
+
+		return e.complexity.Query.ExchangeRates(childComplexity), true
 
 	}
 	return 0, false
@@ -226,10 +357,42 @@ var sources = []*ast.Source{
     condition: String
     price: Int!
     source: String!
+    currency: String!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/currency/currency.graphql", Input: `type Currency {
+    code: String!
+    numericCode: String!
+    fraction: Int!
+    grapheme: String!
+    template: String!
+    decimal: String!
+    thousand: String!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/currency/exchangerate.graphql", Input: `type ExchangeRate {
+    from: Currency!
+    to: Currency!
+    rate: Float!
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/query.graphql", Input: `type Query {
+    """
+    Use this query to find cards
+    """
     cards(query: String!): [Card!]!
+    """
+    Use this query to find single currency
+    """
+    currency(code: String!): Currency!
+    """
+    Use this query to find single exchange rate
+    """
+    exchangeRate(base: String!, to: String!): ExchangeRate!
+    """
+    Use this query to find exchange rates, base is EUR
+    """
+    exchangeRates: [ExchangeRate!]!
 }
 `, BuiltIn: false},
 }
@@ -266,6 +429,45 @@ func (ec *executionContext) field_Query_cards_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["query"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_currency_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_exchangeRate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["base"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("base"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["base"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["to"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["to"] = arg1
 	return args, nil
 }
 
@@ -568,6 +770,522 @@ func (ec *executionContext) fieldContext_Card_source(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Card_currency(ctx context.Context, field graphql.CollectedField, obj *model.Card) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Card_currency(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Currency, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Card_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Card",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_code(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_numericCode(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_numericCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumericCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_numericCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_fraction(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_fraction(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fraction, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_fraction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_grapheme(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_grapheme(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Grapheme, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_grapheme(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_template(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_template(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Template, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_template(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_decimal(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_decimal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Decimal, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_decimal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Currency_thousand(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Currency_thousand(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thousand, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Currency_thousand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExchangeRate_from(ctx context.Context, field graphql.CollectedField, obj *model.ExchangeRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExchangeRate_from(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.From, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Currency)
+	fc.Result = res
+	return ec.marshalNCurrency2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExchangeRate_from(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExchangeRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_Currency_code(ctx, field)
+			case "numericCode":
+				return ec.fieldContext_Currency_numericCode(ctx, field)
+			case "fraction":
+				return ec.fieldContext_Currency_fraction(ctx, field)
+			case "grapheme":
+				return ec.fieldContext_Currency_grapheme(ctx, field)
+			case "template":
+				return ec.fieldContext_Currency_template(ctx, field)
+			case "decimal":
+				return ec.fieldContext_Currency_decimal(ctx, field)
+			case "thousand":
+				return ec.fieldContext_Currency_thousand(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExchangeRate_to(ctx context.Context, field graphql.CollectedField, obj *model.ExchangeRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExchangeRate_to(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.To, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Currency)
+	fc.Result = res
+	return ec.marshalNCurrency2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExchangeRate_to(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExchangeRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_Currency_code(ctx, field)
+			case "numericCode":
+				return ec.fieldContext_Currency_numericCode(ctx, field)
+			case "fraction":
+				return ec.fieldContext_Currency_fraction(ctx, field)
+			case "grapheme":
+				return ec.fieldContext_Currency_grapheme(ctx, field)
+			case "template":
+				return ec.fieldContext_Currency_template(ctx, field)
+			case "decimal":
+				return ec.fieldContext_Currency_decimal(ctx, field)
+			case "thousand":
+				return ec.fieldContext_Currency_thousand(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExchangeRate_rate(ctx context.Context, field graphql.CollectedField, obj *model.ExchangeRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExchangeRate_rate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExchangeRate_rate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExchangeRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_cards(ctx, field)
 	if err != nil {
@@ -619,6 +1337,8 @@ func (ec *executionContext) fieldContext_Query_cards(ctx context.Context, field 
 				return ec.fieldContext_Card_price(ctx, field)
 			case "source":
 				return ec.fieldContext_Card_source(ctx, field)
+			case "currency":
+				return ec.fieldContext_Card_currency(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Card", field.Name)
 		},
@@ -633,6 +1353,192 @@ func (ec *executionContext) fieldContext_Query_cards(ctx context.Context, field 
 	if fc.Args, err = ec.field_Query_cards_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_currency(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_currency(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Currency(rctx, fc.Args["code"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Currency)
+	fc.Result = res
+	return ec.marshalNCurrency2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_Currency_code(ctx, field)
+			case "numericCode":
+				return ec.fieldContext_Currency_numericCode(ctx, field)
+			case "fraction":
+				return ec.fieldContext_Currency_fraction(ctx, field)
+			case "grapheme":
+				return ec.fieldContext_Currency_grapheme(ctx, field)
+			case "template":
+				return ec.fieldContext_Currency_template(ctx, field)
+			case "decimal":
+				return ec.fieldContext_Currency_decimal(ctx, field)
+			case "thousand":
+				return ec.fieldContext_Currency_thousand(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_currency_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exchangeRate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_exchangeRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ExchangeRate(rctx, fc.Args["base"].(string), fc.Args["to"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ExchangeRate)
+	fc.Result = res
+	return ec.marshalNExchangeRate2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_exchangeRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "from":
+				return ec.fieldContext_ExchangeRate_from(ctx, field)
+			case "to":
+				return ec.fieldContext_ExchangeRate_to(ctx, field)
+			case "rate":
+				return ec.fieldContext_ExchangeRate_rate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExchangeRate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_exchangeRate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exchangeRates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_exchangeRates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ExchangeRates(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExchangeRate)
+	fc.Result = res
+	return ec.marshalNExchangeRate2ᚕᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRateᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_exchangeRates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "from":
+				return ec.fieldContext_ExchangeRate_from(ctx, field)
+			case "to":
+				return ec.fieldContext_ExchangeRate_to(ctx, field)
+			case "rate":
+				return ec.fieldContext_ExchangeRate_rate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExchangeRate", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -2585,6 +3491,129 @@ func (ec *executionContext) _Card(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "currency":
+			out.Values[i] = ec._Card_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var currencyImplementors = []string{"Currency"}
+
+func (ec *executionContext) _Currency(ctx context.Context, sel ast.SelectionSet, obj *model.Currency) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, currencyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Currency")
+		case "code":
+			out.Values[i] = ec._Currency_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "numericCode":
+			out.Values[i] = ec._Currency_numericCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fraction":
+			out.Values[i] = ec._Currency_fraction(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "grapheme":
+			out.Values[i] = ec._Currency_grapheme(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "template":
+			out.Values[i] = ec._Currency_template(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "decimal":
+			out.Values[i] = ec._Currency_decimal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "thousand":
+			out.Values[i] = ec._Currency_thousand(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var exchangeRateImplementors = []string{"ExchangeRate"}
+
+func (ec *executionContext) _ExchangeRate(ctx context.Context, sel ast.SelectionSet, obj *model.ExchangeRate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, exchangeRateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExchangeRate")
+		case "from":
+			out.Values[i] = ec._ExchangeRate_from(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "to":
+			out.Values[i] = ec._ExchangeRate_to(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rate":
+			out.Values[i] = ec._ExchangeRate_rate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2637,6 +3666,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_cards(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "currency":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currency(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exchangeRate":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exchangeRate(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exchangeRates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exchangeRates(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3073,6 +4168,93 @@ func (ec *executionContext) marshalNCard2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_my
 		return graphql.Null
 	}
 	return ec._Card(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCurrency2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v model.Currency) graphql.Marshaler {
+	return ec._Currency(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCurrency2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v *model.Currency) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Currency(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExchangeRate2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRate(ctx context.Context, sel ast.SelectionSet, v model.ExchangeRate) graphql.Marshaler {
+	return ec._ExchangeRate(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNExchangeRate2ᚕᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExchangeRate) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExchangeRate2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRate(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExchangeRate2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐExchangeRate(ctx context.Context, sel ast.SelectionSet, v *model.ExchangeRate) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExchangeRate(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {

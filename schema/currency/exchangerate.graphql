@@ -1,0 +1,5 @@
+type ExchangeRate {
+    from: Currency!
+    to: Currency!
+    rate: Float!
+}

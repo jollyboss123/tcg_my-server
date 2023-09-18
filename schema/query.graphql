@@ -1,3 +1,18 @@
 type Query {
+    """
+    Use this query to find cards
+    """
     cards(query: String!): [Card!]!
+    """
+    Use this query to find single currency
+    """
+    currency(code: String!): Currency!
+    """
+    Use this query to find single exchange rate
+    """
+    exchangeRate(base: String!, to: String!): ExchangeRate!
+    """
+    Use this query to find exchange rates, base is EUR
+    """
+    exchangeRates: [ExchangeRate!]!
 }
