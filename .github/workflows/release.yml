@@ -14,7 +14,7 @@ jobs:
       packages: write
     env:
       REGISTRY: docker.io
-      IMAGE_NAME: tcg_my-server
+      IMAGE_NAME: jollyboss/tcg_my-server
       PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
     steps:
