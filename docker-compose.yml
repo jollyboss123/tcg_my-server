@@ -4,8 +4,19 @@ services:
   server:
     image: "docker.io/jollyboss/tcg_my-server"
     container_name: "tcg_my_container"
-    env_file:
-      - .env
+    environment:
+      - "API_HOST=0.0.0.0"
+      - "API_PORT=8080"
+      - "CORS_ALLOWED_ORIGINS=http://localhost:3000"
+      - "CORS_ALLOW_CREDENTIALS=true"
+      - "CORS_ALLOW_PRIVATE_NETWORK=false"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+      - "REDIS_NAME=0"
+      - "REDIS_CACHE_TIME=5m"
+      - "REDIS_ENABLE=true"
+      - "RATE_KEY=2b288976f9cb33e2ecb73d4d60cbf718"
+      - "RATE_ENDPOINT=http://api.exchangeratesapi.io/v1/latest"
     build:
       context: .
       dockerfile: Dockerfile

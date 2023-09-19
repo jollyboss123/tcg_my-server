@@ -6,7 +6,7 @@ import (
 )
 
 type Api struct {
-	Name              string        `default:"go8_api"`
+	Name              string        `default:"tcg_api"`
 	Host              string        `default:"0.0.0.0"`
 	Port              string        `default:"3080"`
 	ReadHeaderTimeout time.Duration `split_words:"true" default:"60s"`

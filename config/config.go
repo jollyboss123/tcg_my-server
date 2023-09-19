@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/joho/godotenv"
 	"log/slog"
+	"os"
 )
 
 type Config struct {
@@ -13,9 +14,11 @@ type Config struct {
 }
 
 func New(logger *slog.Logger) *Config {
-	err := godotenv.Load()
-	if err != nil {
-		logger.Error("build config", slog.String("error", err.Error()))
+	if os.Getenv("APP_ENV") != "prod" {
+		err := godotenv.Load()
+		if err != nil {
+			logger.Error("build config", slog.String("error", err.Error()))
+		}
 	}
 
 	return &Config{
