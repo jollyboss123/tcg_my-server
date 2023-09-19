@@ -92,11 +92,13 @@ func (s *Server) setGlobalMiddleware() {
 
 func (s *Server) newRedis() {
 	if !s.cfg.Cache.Enable {
+		s.log.Info("cache disabled")
 		return
 	}
 
 	client, err := redisLib.New(s.cfg.Cache, s.log)
 	if err != nil {
+		s.log.Error("connect to cache client", slog.String("error", err.Error()))
 		return
 	}
 	s.cache = client

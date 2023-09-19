@@ -106,6 +106,7 @@ func (c *CachedExchangeRate) Fetch(ctx context.Context, base, to string) (*Excha
 func (c *CachedExchangeRate) List(ctx context.Context) ([]*ExchangeRate, error) {
 	val, err := c.cache.Get(ctx, "rates").Result()
 	if err != nil {
+		c.logger.Error("get cache", slog.String("error", err.Error()))
 		return c.fetchAndCache(ctx)
 	}
 	var keys []string

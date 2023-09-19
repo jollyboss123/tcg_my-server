@@ -9,7 +9,6 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). API for retrieving Y
 
 ### Todo
 - [ ] data loading with graphql
-- [ ] currency conversion query
 - [ ] jwt authentication on APIs
 
 ### Reference Documentation
