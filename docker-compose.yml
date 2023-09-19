@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   server:
-    image: "tcg_my/server"
+    image: "jollyboss/tcg_my-server"
     container_name: "tcg_my_container"
     env_file:
       - .env
