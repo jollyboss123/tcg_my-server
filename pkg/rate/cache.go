@@ -34,9 +34,6 @@ func NewCachedExchangeRate(service Service, cache *redis.Client, cfg *config.Con
 func (c *CachedExchangeRate) Fetch(ctx context.Context, base, to string) (*ExchangeRate, error) {
 	base = strings.ToUpper(base)
 	to = strings.ToUpper(to)
-	cacheMiss := false
-	var br *ExchangeRate
-	var dr *ExchangeRate
 
 	_, err := c.currencyService.Fetch(ctx, base)
 	if errors.Is(err, currency.ErrCurrencyNotFound) {
@@ -50,50 +47,62 @@ func (c *CachedExchangeRate) Fetch(ctx context.Context, base, to string) (*Excha
 		return nil, err
 	}
 
-	b, err := c.cache.Get(ctx, "rate:EUR:"+base).Result()
+	// Using MGet for batch retrieval
+	values, err := c.cache.MGet(ctx, "rate:EUR:"+base, "rate:EUR:"+to).Result()
 	if err != nil {
-		c.logger.Error("cache miss for base", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
-		cacheMiss = true
+		c.logger.Error("cache miss", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
+		return c.fetchAndRefreshCache(ctx, base, to)
 	}
 
-	d, err := c.cache.Get(ctx, "rate:EUR:"+to).Result()
-	if err != nil {
-		c.logger.Error("cache miss for dest", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
-		cacheMiss = true
-	}
-
-	if cacheMiss != true {
-		err = json.Unmarshal([]byte(b), &br)
+	var br, dr *ExchangeRate
+	if values[0] != nil {
+		err = json.Unmarshal([]byte(values[0].(string)), &br)
 		if err != nil {
 			c.logger.Error("unmarshal base exchange rate", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
 			return nil, err
 		}
-		err = json.Unmarshal([]byte(d), &dr)
+	}
+	if values[1] != nil {
+		err = json.Unmarshal([]byte(values[1].(string)), &dr)
 		if err != nil {
 			c.logger.Error("unmarshal dest exchange rate", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
 			return nil, err
 		}
-	} else {
-		cache, err := c.fetchAndCache(ctx)
-		if err != nil {
-			c.logger.Error("fetch and cache", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
-			return nil, err
+	}
+
+	if br == nil || dr == nil {
+		return c.fetchAndRefreshCache(ctx, base, to)
+	}
+
+	return &ExchangeRate{
+		From: br.To,
+		To:   dr.To,
+		Rate: br.Rate / dr.Rate,
+	}, nil
+}
+
+// fetchAndRefreshCache will handle cache misses for Fetch
+func (c *CachedExchangeRate) fetchAndRefreshCache(ctx context.Context, base, to string) (*ExchangeRate, error) {
+	var br, dr *ExchangeRate
+	cache, err := c.fetchAndCache(ctx)
+	if err != nil {
+		c.logger.Error("fetch and cache", slog.String("error", err.Error()), slog.String("base", base), slog.String("to", to))
+		return nil, err
+	}
+	for _, er := range cache {
+		if base == er.To.Code {
+			br = er
 		}
-		for _, er := range cache {
-			if base == er.To.Code {
-				br = er
-			}
-			if to == er.To.Code {
-				dr = er
-			}
-			if br != nil && er != nil {
-				break
-			}
+		if to == er.To.Code {
+			dr = er
 		}
-		if br == nil || dr == nil {
-			c.logger.Error("Could not find exchange rates", slog.String("base", base), slog.String("to", to))
-			return nil, fmt.Errorf("could not find exchange rates for base: %s and/or to: %s", base, to)
+		if br != nil && dr != nil {
+			break
 		}
+	}
+	if br == nil || dr == nil {
+		c.logger.Error("could not find exchange rates", slog.String("base", base), slog.String("to", to))
+		return nil, fmt.Errorf("could not find exchange rates for base: %s and/or to: %s", base, to)
 	}
 
 	return &ExchangeRate{
