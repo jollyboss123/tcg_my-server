@@ -47,6 +47,7 @@ type ComplexityRoot struct {
 		Code      func(childComplexity int) int
 		Condition func(childComplexity int) int
 		Currency  func(childComplexity int) int
+		Image     func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Price     func(childComplexity int) int
 		Rarity    func(childComplexity int) int
@@ -119,6 +120,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Card.Currency(childComplexity), true
+
+	case "Card.image":
+		if e.complexity.Card.Image == nil {
+			break
+		}
+
+		return e.complexity.Card.Image(childComplexity), true
 
 	case "Card.name":
 		if e.complexity.Card.Name == nil {
@@ -358,6 +366,7 @@ var sources = []*ast.Source{
     price: Int!
     source: String!
     currency: String!
+    image: String
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/currency/currency.graphql", Input: `type Currency {
@@ -802,6 +811,47 @@ func (ec *executionContext) _Card_currency(ctx context.Context, field graphql.Co
 }
 
 func (ec *executionContext) fieldContext_Card_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Card",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Card_image(ctx context.Context, field graphql.CollectedField, obj *model.Card) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Card_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Card_image(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Card",
 		Field:      field,
@@ -1339,6 +1389,8 @@ func (ec *executionContext) fieldContext_Query_cards(ctx context.Context, field 
 				return ec.fieldContext_Card_source(ctx, field)
 			case "currency":
 				return ec.fieldContext_Card_currency(ctx, field)
+			case "image":
+				return ec.fieldContext_Card_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Card", field.Name)
 		},
@@ -3496,6 +3548,8 @@ func (ec *executionContext) _Card(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "image":
+			out.Values[i] = ec._Card_image(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

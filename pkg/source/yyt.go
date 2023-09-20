@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"unicode"
@@ -14,6 +15,7 @@ import (
 
 type YYT struct {
 	endpoint string
+	imageurl string
 	source   string
 	logger   *slog.Logger
 }
@@ -22,6 +24,7 @@ func NewYYT(logger *slog.Logger) *YYT {
 	child := logger.With(slog.String("api", "yyt"))
 	return &YYT{
 		endpoint: "https://yuyu-tei.jp/sell/ygo/s/search",
+		imageurl: "https://img.yuyu-tei.jp/card_image/ygo/front/",
 		source:   "Yuyu-tei",
 		logger:   child,
 	}
@@ -60,7 +63,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", processHTML(&cs, errCh, y.source, y.logger))
+	c.OnHTML("div[id=card-list3]", y.processHTML(&cs, errCh, y.source, y.logger))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -105,7 +108,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	}
 }
 
-func processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
+func (y *YYT) processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
@@ -115,6 +118,13 @@ func processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logg
 			if err != nil {
 				errCh <- err
 				return
+			}
+			imgurl := el.ChildAttr("a", "href")
+			id := strings.Split(imgurl, "/card/")
+			if len(id) > 1 {
+				card.Image = y.imageurl + id[1] + ".jpg"
+			} else {
+				logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
 			}
 			card.Price = price
 			card.Rarity = rarity
@@ -126,6 +136,7 @@ func processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logg
 				slog.String("code", card.Code),
 				slog.String("rarity", card.Rarity),
 				slog.String("condition", card.Condition),
+				slog.String("img", card.Image),
 				slog.Int64("price", card.Price))
 		})
 	}

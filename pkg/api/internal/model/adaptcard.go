@@ -14,6 +14,7 @@ func ToCard(card *source.Card) *Card {
 		Price:     int(card.Price),
 		Source:    card.Source,
 		Currency:  card.Currency,
+		Image:     &card.Image,
 	}
 }
 

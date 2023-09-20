@@ -6,4 +6,5 @@ type Card {
     price: Int!
     source: String!
     currency: String!
+    image: String
 }

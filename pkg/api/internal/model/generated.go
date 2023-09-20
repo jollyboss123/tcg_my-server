@@ -10,6 +10,7 @@ type Card struct {
 	Price     int     `json:"price"`
 	Source    string  `json:"source"`
 	Currency  string  `json:"currency"`
+	Image     *string `json:"image,omitempty"`
 }
 
 type Currency struct {
