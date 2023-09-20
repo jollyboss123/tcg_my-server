@@ -33,6 +33,7 @@ func NewYYT(logger *slog.Logger) *YYT {
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
 func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
+	query = strings.ToUpper(query)
 	baseURL, err := url.Parse(y.endpoint)
 	if err != nil {
 		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", y.endpoint))
@@ -132,7 +133,7 @@ func (y *YYT) processHTML(cs *[]*Card, errCh chan error, source string, logger *
 			card.Source = source
 			*cs = append(*cs, &card)
 
-			logger.Info("card info", slog.String("name", card.Name),
+			logger.Debug("card info", slog.String("name", card.Name),
 				slog.String("code", card.Code),
 				slog.String("rarity", card.Rarity),
 				slog.String("condition", card.Condition),

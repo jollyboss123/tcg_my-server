@@ -7,6 +7,7 @@ import (
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
+	"strings"
 	"sync"
 )
 
@@ -28,12 +29,14 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 }
 
 func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) {
+	query = strings.ToUpper(query)
 	var cards []*Card
 	var mu sync.Mutex
 
 	patterns := []string{
 		fmt.Sprintf("*:%s", query),   // for code
 		fmt.Sprintf("*:%s:*", query), // for name
+		fmt.Sprintf("*:%s-*", query), // for booster pack
 	}
 
 	wg := &sync.WaitGroup{}
@@ -135,7 +138,7 @@ func (c *CachedSource) scan(ctx context.Context, pattern string) ([]*Card, error
 
 	iter := c.cache.Scan(ctx, cursor, pattern, 0).Iterator()
 	for iter.Next(ctx) {
-		c.logger.Info("key found", slog.String("key", iter.Val()))
+		c.logger.Debug("key found", slog.String("key", iter.Val()))
 		var card *Card
 		val, err := c.cache.Get(ctx, iter.Val()).Result()
 		if err != nil {

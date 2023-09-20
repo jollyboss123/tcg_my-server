@@ -107,7 +107,7 @@ func (b *BigWeb) List(ctx context.Context, query string) ([]*Card, error) {
 
 		c = append(c, &card)
 
-		b.logger.Info("card info", slog.String("name", card.Name),
+		b.logger.Debug("card info", slog.String("name", card.Name),
 			slog.String("code", card.Code),
 			slog.String("rarity", card.Rarity),
 			slog.String("condition", card.Condition),
