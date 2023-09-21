@@ -28,6 +28,8 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 	}
 }
 
+// List fetches cards based on the provided query from the cache or from external services.
+// If the cache has entries for the given query, it fetches from the cache; otherwise, it fetches from services.
 func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) {
 	query = strings.ToUpper(query)
 
@@ -61,9 +63,9 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]
 	var mu sync.Mutex
 
 	patterns := []string{
-		fmt.Sprintf("*:%s", query),   // for code
-		fmt.Sprintf("*:%s:*", query), // for name
-		fmt.Sprintf("*:%s-*", query), // for booster pack
+		fmt.Sprintf("*||%s", query),    // for code
+		fmt.Sprintf("*||%s||*", query), // for name
+		fmt.Sprintf("*||%s-*", query),  // for booster pack
 	}
 
 	wg := &sync.WaitGroup{}
@@ -86,7 +88,7 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]
 				return
 			}
 
-			c.logger.Info("cache hit", slog.String("query", query), slog.String("pattern", p))
+			c.logger.Info("cache hit", slog.String("query", query), slog.String("pattern", p), slog.Int("total", len(cs)))
 			mu.Lock()
 			cards = append(cards, cs...)
 			mu.Unlock()
@@ -138,7 +140,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 	}
 
 	for _, card := range cards {
-		cacheKey := fmt.Sprintf("%s:%s:%s", card.Rarity, card.Name, card.Code)
+		cacheKey := fmt.Sprintf("%s||%s||%s", card.Rarity, card.Name, card.Code)
 		_ = c.cacheQuery(ctx, card.Name)
 		_ = c.cacheQuery(ctx, card.Code)
 		cacheEntry, err := json.Marshal(card)
