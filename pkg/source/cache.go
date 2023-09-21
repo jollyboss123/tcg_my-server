@@ -30,6 +30,33 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 
 func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) {
 	query = strings.ToUpper(query)
+
+	if c.isQueryCached(ctx, query) {
+		return c.fetchFromDataCache(ctx, query)
+	}
+
+	cards, err := c.fetchAndCache(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return cards, nil
+}
+
+func (c *CachedSource) isQueryCached(ctx context.Context, query string) bool {
+	exists, err := c.cache.Exists(ctx, fmt.Sprintf("query:%s", query)).Result()
+	return err == nil && exists > 0
+}
+
+func (c *CachedSource) cacheQuery(ctx context.Context, query string) error {
+	err := c.cache.Set(ctx, fmt.Sprintf("query:%s", query), "true", c.cfg.Cache.CacheTime).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
 
@@ -77,13 +104,6 @@ func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) 
 		return cards, nil
 	}
 
-	c.logger.Info("cache miss", slog.String("query", query))
-	cards, err := c.fetchAndCache(ctx, query)
-	if err != nil {
-		c.logger.Error("fetch and cache", slog.String("error", err.Error()), slog.String("query", query))
-		return nil, err
-	}
-
 	return cards, nil
 }
 
@@ -119,14 +139,17 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 
 	for _, card := range cards {
 		cacheKey := fmt.Sprintf("%s:%s:%s", card.Rarity, card.Name, card.Code)
+		_ = c.cacheQuery(ctx, card.Name)
+		_ = c.cacheQuery(ctx, card.Code)
 		cacheEntry, err := json.Marshal(card)
 		if err != nil {
-			c.logger.Warn("cache entry", slog.String("error", err.Error()))
+			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
 			continue
 		}
 		err = c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime).Err()
 		if err != nil {
-			return cards, nil
+			c.logger.Warn("set cache", slog.String("error", err.Error()), slog.String("query", query))
+			continue
 		}
 	}
 	return cards, nil
