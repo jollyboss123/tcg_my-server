@@ -13,7 +13,7 @@ func ToCard(card *source.Card) *Card {
 		Condition: &card.Condition,
 		Price:     int(card.Price),
 		Source:    card.Source,
-		Currency:  card.Currency,
+		Currency:  ToCurrency(card.Currency),
 		Image:     &card.Image,
 	}
 }

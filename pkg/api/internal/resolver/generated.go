@@ -365,7 +365,7 @@ var sources = []*ast.Source{
     condition: String
     price: Int!
     source: String!
-    currency: String!
+    currency: Currency!
     image: String
 }
 `, BuiltIn: false},
@@ -805,9 +805,9 @@ func (ec *executionContext) _Card_currency(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNCurrency2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Card_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -817,7 +817,23 @@ func (ec *executionContext) fieldContext_Card_currency(ctx context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_Currency_code(ctx, field)
+			case "numericCode":
+				return ec.fieldContext_Currency_numericCode(ctx, field)
+			case "fraction":
+				return ec.fieldContext_Currency_fraction(ctx, field)
+			case "grapheme":
+				return ec.fieldContext_Currency_grapheme(ctx, field)
+			case "template":
+				return ec.fieldContext_Currency_template(ctx, field)
+			case "decimal":
+				return ec.fieldContext_Currency_decimal(ctx, field)
+			case "thousand":
+				return ec.fieldContext_Currency_thousand(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
 		},
 	}
 	return fc, nil

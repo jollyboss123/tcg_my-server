@@ -3,14 +3,14 @@
 package model
 
 type Card struct {
-	Code      string  `json:"code"`
-	Name      string  `json:"name"`
-	Rarity    string  `json:"rarity"`
-	Condition *string `json:"condition,omitempty"`
-	Price     int     `json:"price"`
-	Source    string  `json:"source"`
-	Currency  string  `json:"currency"`
-	Image     *string `json:"image,omitempty"`
+	Code      string    `json:"code"`
+	Name      string    `json:"name"`
+	Rarity    string    `json:"rarity"`
+	Condition *string   `json:"condition,omitempty"`
+	Price     int       `json:"price"`
+	Source    string    `json:"source"`
+	Currency  *Currency `json:"currency"`
+	Image     *string   `json:"image,omitempty"`
 }
 
 type Currency struct {

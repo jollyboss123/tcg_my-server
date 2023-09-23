@@ -16,7 +16,10 @@ import (
 )
 
 func (s *Server) InitRouter() {
-	executableSchemeConfig := newConfig(s.scrapeService(), s.currencyService(), s.rateService())
+	executableSchemeConfig := newConfig(
+		s.currencyService(),
+		s.scrapeService(),
+		s.rateService())
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})
@@ -48,7 +51,7 @@ func (s *Server) scrapeService() source.ScrapeService {
 		s.cache,
 		s.cfg,
 		s.log,
-		source.NewYYT(s.log),
+		source.NewYYT(s.log, s.currencyService()),
 		source.NewBigWeb(s.log),
 	)
 }

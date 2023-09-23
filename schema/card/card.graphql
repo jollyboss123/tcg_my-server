@@ -5,6 +5,6 @@ type Card {
     condition: String
     price: Int!
     source: String!
-    currency: String!
+    currency: Currency!
     image: String
 }

@@ -34,9 +34,11 @@ func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) 
 	query = strings.ToUpper(query)
 
 	if c.isQueryCached(ctx, query) {
+		c.logger.Info("cache hit", slog.String("query", query))
 		return c.fetchFromDataCache(ctx, query)
 	}
 
+	c.logger.Info("cache miss", slog.String("query", query))
 	cards, err := c.fetchAndCache(ctx, query)
 	if err != nil {
 		return nil, err
@@ -63,9 +65,8 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]
 	var mu sync.Mutex
 
 	patterns := []string{
-		fmt.Sprintf("*||%s", query),    // for code
-		fmt.Sprintf("*||%s||*", query), // for name
-		fmt.Sprintf("*||%s-*", query),  // for booster pack
+		fmt.Sprintf("*||*%s*", query),    // for code
+		fmt.Sprintf("*||*%s*||*", query), // for name
 	}
 
 	wg := &sync.WaitGroup{}
@@ -154,6 +155,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 			continue
 		}
 	}
+	_ = c.cacheQuery(ctx, query)
 	return cards, nil
 }
 

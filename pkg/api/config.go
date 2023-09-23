@@ -9,7 +9,11 @@ import (
 )
 
 //go:generate go run github.com/99designs/gqlgen --config ../../gqlgen.yml generate
-func newConfig(scrape source.ScrapeService, currency currency.Service, rate rate.Service) resolver.Config {
+func newConfig(
+	currency currency.Service,
+	scrape source.ScrapeService,
+	rate rate.Service,
+) resolver.Config {
 	return resolver.Config{
 		Resolvers: &resolverRoot{
 			queryResolver: query.NewQueryResolver(scrape, currency, rate),

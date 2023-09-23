@@ -2,6 +2,7 @@ package source
 
 import (
 	"context"
+	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 )
 
 type ScrapeService interface {
@@ -15,6 +16,6 @@ type Card struct {
 	Condition string
 	Price     int64
 	Source    string
-	Currency  string
+	Currency  *currency.Currency
 	Image     string
 }

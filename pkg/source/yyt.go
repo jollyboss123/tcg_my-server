@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gocolly/colly/v2"
+	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -18,15 +19,17 @@ type YYT struct {
 	imageurl string
 	source   string
 	logger   *slog.Logger
+	cs       currency.Service
 }
 
-func NewYYT(logger *slog.Logger) *YYT {
+func NewYYT(logger *slog.Logger, cs currency.Service) *YYT {
 	child := logger.With(slog.String("api", "yyt"))
 	return &YYT{
 		endpoint: "https://yuyu-tei.jp/sell/ygo/s/search",
 		imageurl: "https://img.yuyu-tei.jp/card_image/ygo/front/",
 		source:   "Yuyu-tei",
 		logger:   child,
+		cs:       cs,
 	}
 }
 
@@ -64,7 +67,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", y.processHTML(&cs, errCh, y.source, y.logger))
+	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, y.logger))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -109,7 +112,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	}
 }
 
-func (y *YYT) processHTML(cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
+func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
@@ -131,6 +134,11 @@ func (y *YYT) processHTML(cs *[]*Card, errCh chan error, source string, logger *
 			card.Rarity = rarity
 			card.Name = el.ChildText("a > h4")
 			card.Source = source
+			c, err := y.cs.Fetch(ctx, "JPY")
+			if err != nil {
+				logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
+			}
+			card.Currency = c
 			*cs = append(*cs, &card)
 
 			logger.Debug("card info", slog.String("name", card.Name),
