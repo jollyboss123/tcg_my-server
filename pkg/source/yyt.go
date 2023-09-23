@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gocolly/colly/v2"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -15,31 +16,34 @@ import (
 )
 
 type YYT struct {
-	endpoint string
-	imageurl string
-	source   string
-	logger   *slog.Logger
-	cs       currency.Service
+	source string
+	logger *slog.Logger
+	cs     currency.Service
+	gs     game.Service
 }
 
-func NewYYT(logger *slog.Logger, cs currency.Service) *YYT {
+func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service) *YYT {
 	child := logger.With(slog.String("api", "yyt"))
 	return &YYT{
-		endpoint: "https://yuyu-tei.jp/sell/ygo/s/search",
-		imageurl: "https://img.yuyu-tei.jp/card_image/ygo/front/",
-		source:   "Yuyu-tei",
-		logger:   child,
-		cs:       cs,
+		source: "Yuyu-tei",
+		logger: child,
+		cs:     cs,
+		gs:     gs,
 	}
 }
 
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
-func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
+func (y *YYT) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
-	baseURL, err := url.Parse(y.endpoint)
+	g, err := y.gs.Fetch(ctx, game)
 	if err != nil {
-		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", y.endpoint))
+		y.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("query", query), slog.String("game", game))
+		return make([]*Card, 0), err
+	}
+	baseURL, err := url.Parse(g.Endpoint)
+	if err != nil {
+		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", g.Endpoint))
 		return nil, err
 	}
 
@@ -67,7 +71,7 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, y.logger))
+	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, y.logger, g.ImageEndpoint))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -112,7 +116,11 @@ func (y *YYT) List(ctx context.Context, query string) ([]*Card, error) {
 	}
 }
 
-func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source string, logger *slog.Logger) func(*colly.HTMLElement) {
+func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source string, logger *slog.Logger, imageURL string) func(*colly.HTMLElement) {
+	c, err := y.cs.Fetch(ctx, "JPY")
+	if err != nil {
+		logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
+	}
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
 		e.ForEach("div[id=card-lits] > div .card-product", func(_ int, el *colly.HTMLElement) {
@@ -126,7 +134,7 @@ func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 			imgurl := el.ChildAttr("a", "href")
 			id := strings.Split(imgurl, "/card/")
 			if len(id) > 1 {
-				card.Image = y.imageurl + id[1] + ".jpg"
+				card.Image = imageURL + id[1] + ".jpg"
 			} else {
 				logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
 			}
@@ -134,10 +142,10 @@ func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 			card.Rarity = rarity
 			card.Name = el.ChildText("a > h4")
 			card.Source = source
-			c, err := y.cs.Fetch(ctx, "JPY")
-			if err != nil {
-				logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
-			}
+			//c, err := y.cs.Fetch(ctx, "JPY")
+			//if err != nil {
+			//	logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
+			//}
 			card.Currency = c
 			*cs = append(*cs, &card)
 

@@ -11,8 +11,10 @@ type Service interface {
 }
 
 type Game struct {
-	Title string
-	Image string
+	Title         string
+	Image         string
+	Endpoint      string
+	ImageEndpoint string
 }
 
 type service struct {

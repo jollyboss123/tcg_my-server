@@ -29,9 +29,9 @@ func (g Games) FetchAll() []*Game {
 }
 
 var games = Games{
-	YGO: {Title: "Yu-Gi-Oh!", Image: "https://yuyu-tei.jp/images/gamelogo/ygo.svg"},
-	POC: {Title: "Pokemon", Image: "https://yuyu-tei.jp/images/gamelogo/poc.svg"},
-	VG:  {Title: "Card Fight!! Vanguard", Image: "https://yuyu-tei.jp/images/gamelogo/vg.svg"},
-	OP:  {Title: "One Piece Card Game", Image: "https://yuyu-tei.jp/images/gamelogo/opc.svg"},
-	WS:  {Title: "Weiss Schwarz", Image: "https://yuyu-tei.jp/images/gamelogo/ws.svg"},
+	YGO: {Title: "Yu-Gi-Oh!", Image: "https://yuyu-tei.jp/images/gamelogo/ygo.svg", Endpoint: "https://yuyu-tei.jp/sell/ygo/s/search", ImageEndpoint: "https://img.yuyu-tei.jp/card_image/ygo/front/"},
+	POC: {Title: "Pokemon", Image: "https://yuyu-tei.jp/images/gamelogo/poc.svg", Endpoint: "https://yuyu-tei.jp/sell/poc/s/search", ImageEndpoint: "https://img.yuyu-tei.jp/card_image/poc/front/"},
+	VG:  {Title: "Card Fight!! Vanguard", Image: "https://yuyu-tei.jp/images/gamelogo/vg.svg", Endpoint: "https://yuyu-tei.jp/sell/vg/s/search", ImageEndpoint: "https://img.yuyu-tei.jp/card_image/vg/front/"},
+	OPC: {Title: "One Piece Card Game", Image: "https://yuyu-tei.jp/images/gamelogo/opc.svg", Endpoint: "https://yuyu-tei.jp/sell/opc/s/search", ImageEndpoint: "https://img.yuyu-tei.jp/card_image/opc/front/"},
+	WS:  {Title: "Weiss Schwarz", Image: "https://yuyu-tei.jp/images/gamelogo/ws.svg", Endpoint: "https://yuyu-tei.jp/sell/ws/s/search", ImageEndpoint: "https://img.yuyu-tei.jp/card_image/ws/front/"},
 }

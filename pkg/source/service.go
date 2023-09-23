@@ -6,7 +6,7 @@ import (
 )
 
 type ScrapeService interface {
-	List(ctx context.Context, query string) ([]*Card, error)
+	List(ctx context.Context, query, game string) ([]*Card, error)
 }
 
 type Card struct {

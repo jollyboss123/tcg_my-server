@@ -5,6 +5,6 @@ const (
 	YGO = "YGO"
 	POC = "POC"
 	VG  = "VG"
-	OP  = "OP"
+	OPC = "OPC"
 	WS  = "WS"
 )

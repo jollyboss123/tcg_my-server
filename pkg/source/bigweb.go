@@ -29,7 +29,7 @@ var (
 	ErrCardDataFormat = errors.New("unexpected card data format")
 )
 
-func (b *BigWeb) List(ctx context.Context, query string) ([]*Card, error) {
+func (b *BigWeb) List(ctx context.Context, query, game string) ([]*Card, error) {
 	baseURL, err := url.Parse(b.endpoint)
 	if err != nil {
 		b.logger.Error("parsing url", err.Error(), slog.String("url", b.endpoint))

@@ -76,7 +76,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cards         func(childComplexity int, query string) int
+		Cards         func(childComplexity int, query string, game string) int
 		Currency      func(childComplexity int, code string) int
 		ExchangeRate  func(childComplexity int, base string, to string) int
 		ExchangeRates func(childComplexity int) int
@@ -85,7 +85,7 @@ type ComplexityRoot struct {
 }
 
 type QueryResolver interface {
-	Cards(ctx context.Context, query string) ([]*model.Card, error)
+	Cards(ctx context.Context, query string, game string) ([]*model.Card, error)
 	Currency(ctx context.Context, code string) (*model.Currency, error)
 	ExchangeRate(ctx context.Context, base string, to string) (*model.ExchangeRate, error)
 	ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error)
@@ -257,7 +257,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Cards(childComplexity, args["query"].(string)), true
+		return e.complexity.Query.Cards(childComplexity, args["query"].(string), args["game"].(string)), true
 
 	case "Query.currency":
 		if e.complexity.Query.Currency == nil {
@@ -422,7 +422,7 @@ var sources = []*ast.Source{
     """
     Use this query to find cards
     """
-    cards(query: String!): [Card!]!
+    cards(query: String!, game: String!): [Card!]!
     """
     Use this query to find single currency
     """
@@ -475,6 +475,15 @@ func (ec *executionContext) field_Query_cards_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["query"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["game"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("game"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["game"] = arg1
 	return args, nil
 }
 
@@ -1488,7 +1497,7 @@ func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Cards(rctx, fc.Args["query"].(string))
+		return ec.resolvers.Query().Cards(rctx, fc.Args["query"].(string), fc.Args["game"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

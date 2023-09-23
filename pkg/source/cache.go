@@ -30,7 +30,7 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 
 // List fetches cards based on the provided query from the cache or from external services.
 // If the cache has entries for the given query, it fetches from the cache; otherwise, it fetches from services.
-func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) {
+func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
 
 	if c.isQueryCached(ctx, query) {
@@ -39,7 +39,7 @@ func (c *CachedSource) List(ctx context.Context, query string) ([]*Card, error) 
 	}
 
 	c.logger.Info("cache miss", slog.String("query", query))
-	cards, err := c.fetchAndCache(ctx, query)
+	cards, err := c.fetchAndCache(ctx, query, game)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]
 	return cards, nil
 }
 
-func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card, error) {
+func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
 
@@ -121,7 +121,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 		go func(s ScrapeService) {
 			defer wg.Done()
 
-			cs, err := s.List(ctx, query)
+			cs, err := s.List(ctx, query, game)
 			if err != nil {
 				c.logger.Error("list card", slog.String("error", err.Error()), slog.String("query", query))
 				return
