@@ -4,6 +4,7 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/query"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/resolver"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 )
@@ -13,10 +14,11 @@ func newConfig(
 	currency currency.Service,
 	scrape source.ScrapeService,
 	rate rate.Service,
+	game game.Service,
 ) resolver.Config {
 	return resolver.Config{
 		Resolvers: &resolverRoot{
-			queryResolver: query.NewQueryResolver(scrape, currency, rate),
+			queryResolver: query.NewQueryResolver(scrape, currency, rate, game),
 		},
 	}
 }

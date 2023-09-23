@@ -28,3 +28,8 @@ type ExchangeRate struct {
 	To   *Currency `json:"to"`
 	Rate float64   `json:"rate"`
 }
+
+type Game struct {
+	Title string  `json:"title"`
+	Image *string `json:"image,omitempty"`
+}

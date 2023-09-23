@@ -5,6 +5,7 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/model"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/resolver"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 )
@@ -13,13 +14,20 @@ type queryResolver struct {
 	scrape   source.ScrapeService
 	currency currency.Service
 	rate     rate.Service
+	game     game.Service
 }
 
-func NewQueryResolver(s source.ScrapeService, c currency.Service, r rate.Service) resolver.QueryResolver {
+func NewQueryResolver(
+	s source.ScrapeService,
+	c currency.Service,
+	r rate.Service,
+	g game.Service,
+) resolver.QueryResolver {
 	return &queryResolver{
 		scrape:   s,
 		currency: c,
 		rate:     r,
+		game:     g,
 	}
 }
 
@@ -53,4 +61,12 @@ func (q queryResolver) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate
 		return nil, err
 	}
 	return model.ToRates(rs), nil
+}
+
+func (q queryResolver) Games(ctx context.Context) ([]*model.Game, error) {
+	gs, err := q.game.FetchAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return model.ToGames(gs), nil
 }

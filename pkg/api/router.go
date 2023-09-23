@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"net/http"
 
@@ -19,7 +20,9 @@ func (s *Server) InitRouter() {
 	executableSchemeConfig := newConfig(
 		s.currencyService(),
 		s.scrapeService(),
-		s.rateService())
+		s.rateService(),
+		s.gameService(),
+	)
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
 	gqlHandler.AddTransport(transport.GET{})
@@ -68,4 +71,8 @@ func (s *Server) rateService() rate.Service {
 		s.log,
 		s.currencyService(),
 	)
+}
+
+func (s *Server) gameService() game.Service {
+	return game.NewService(s.log)
 }

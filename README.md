@@ -1,6 +1,6 @@
 # TCG.MY
 
-Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). API for retrieving Yugioh OCG cards' price by scraping data
+Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh OCG cards' price by scraping data
 from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
 
 ## Design
@@ -32,7 +32,7 @@ websites being scraped.
 
 #### Cache structure
 
-Each card is cached in Redis using a combination of the card's attributes. The cache key follows the
+Each card is cached in Redis using a unique combination of the card's attributes. The cache key follows the
 format: `<Rarity>||<Name>||<Code>`
 
 #### Queries
@@ -40,9 +40,8 @@ format: `<Rarity>||<Name>||<Code>`
 Queries can be based on a card's code, name, or associated booster pack. To accommodate this, we use different search
 patterns:
 
-- Code: `*||<Query>`
-- Name: `*||<Query>||*`
-- Booster: `*||<Query>-*`
+- Code or Booster: `*||*<Query>*`
+- Name: `*||*<Query>*||*`
 
 This approach helps us retrieve cached cards without knowing the exact attributes of a card.
 

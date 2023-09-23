@@ -1,0 +1,4 @@
+type Game {
+    title: String!
+    image: String
+}

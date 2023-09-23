@@ -15,4 +15,8 @@ type Query {
     Use this query to find exchange rates, base is EUR
     """
     exchangeRates: [ExchangeRate!]!
+    """
+    Use this query to find supported games
+    """
+    games: [Game!]!
 }

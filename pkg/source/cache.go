@@ -155,6 +155,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query string) ([]*Card
 			continue
 		}
 	}
+	c.logger.Info("cache entry", slog.String("query", query), slog.Int("total", len(cards)))
 	_ = c.cacheQuery(ctx, query)
 	return cards, nil
 }
