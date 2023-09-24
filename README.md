@@ -1,9 +1,10 @@
 # TCG.MY
 
-Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh OCG cards' price by scraping data
+Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh OCG cards' price by
+scraping data
 from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
 
-## Design
+## High Level Design
 
 1. web scraping with [go-colly](https://github.com/gocolly/colly)
 2. graphql http caching
@@ -40,17 +41,33 @@ format: `<Rarity>||<Name>||<Code>`
 Queries can be based on a card's code, name, or associated booster pack. To accommodate this, we use different search
 patterns:
 
-- Code or Booster: `*||*<Query>*`
+- Code or Booster: `*||*||*<Query>*`
 - Name: `*||*<Query>*||*`
 
 This approach helps us retrieve cached cards without knowing the exact attributes of a card.
 
 #### Cache markers for queries
 
-To prevent unnecessary external service calls, we keep a separate cache entry for each unique query. These entries are
-not the card data itself but just markers indicating that a particular query has been made before. These are stored with
-the key format: `query:<Query>`.
-The value for these markers is just the string "true".
+To optimize our external service calls, we maintain a separate cache entry for each unique query made.
+These entries are markers indicating prior queries and do not store the actual card data.
+They follow the format: `query:<Game>:<Query>`
+
+#### Caching logic
+
+Redis's sets and hashes is utilized to enhance our caching strategy.
+Once we have the card identifiers from the sets, we can retrieve the full card data from the hashes.
+
+This combination of sets and hashes allow for faster membership checks and storing card data
+in hashes can be more space-efficient than simple k-v pair when there's lots of data.
+
+- Sets:
+  Sets are employed to track unique card identifiers for a specific game. Each game has its own set where each member is
+  a unique combination of card attributes, formatted as `<Rarity>||<Name>||<Code>`. This makes it quick and efficient to
+  determine if a card exists in the cache and to perform pattern-based searches across cards.
+- Hashes:
+  While sets give us a fast way to identify the existence of a card or to search across them, hashes store the actual
+  data of these cards.
+  For each game, there's a hash where the key is the unique card identifier and the value is the serialized card data.
 
 ## Reference Documentation
 

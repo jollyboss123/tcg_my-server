@@ -63,10 +63,12 @@ func (c *CachedSource) cacheQuery(ctx context.Context, query, game string) error
 func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
+	setKey := fmt.Sprintf("game:identifiers:%s", game)
+	hashKey := fmt.Sprintf("game:data:%s", game)
 
 	patterns := []string{
-		fmt.Sprintf("%s||*||*||*%s*", game, query), // for code
-		fmt.Sprintf("%s||*||*%s*||*", game, query), // for name
+		fmt.Sprintf("*||*||*%s*", query), // for code
+		fmt.Sprintf("*||*%s*||*", query), // for name
 	}
 
 	wg := &sync.WaitGroup{}
@@ -78,7 +80,7 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game strin
 		go func(p string) {
 			defer wg.Done()
 
-			cs, err := c.scan(ctx, p)
+			cs, err := c.sscan(ctx, setKey, hashKey, p)
 			if err != nil {
 				c.logger.Error("redis scan", slog.String("error", err.Error()), slog.String("pattern", p))
 				errCh <- err
@@ -141,19 +143,23 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 	}
 
 	for _, card := range cards {
-		cacheKey := fmt.Sprintf("%s||%s||%s||%s", game, card.Rarity, card.Name, card.Code)
 		_ = c.cacheQuery(ctx, card.Name, game)
 		_ = c.cacheQuery(ctx, card.Code, game)
-		cacheEntry, err := json.Marshal(card)
+		uID := fmt.Sprintf("%s||%s||%s", card.Rarity, card.Name, card.Code)
+		setKey := fmt.Sprintf("game:identifiers:%s", game)
+		hashKey := fmt.Sprintf("game:data:%s", game)
+
+		err := c.cache.SAdd(ctx, setKey, uID).Err()
+		if err != nil {
+			c.logger.Warn("set add cache", slog.String("error", err.Error()), slog.String("query", query))
+			continue
+		}
+		data, err := json.Marshal(card)
 		if err != nil {
 			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
 			continue
 		}
-		err = c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime).Err()
-		if err != nil {
-			c.logger.Warn("set cache", slog.String("error", err.Error()), slog.String("query", query))
-			continue
-		}
+		err = c.cache.HSet(ctx, hashKey, uID, data).Err()
 	}
 	c.logger.Info("cache entry", slog.String("query", query), slog.Int("total", len(cards)))
 	_ = c.cacheQuery(ctx, query, game)
@@ -169,6 +175,33 @@ func (c *CachedSource) scan(ctx context.Context, pattern string) ([]*Card, error
 		c.logger.Debug("key found", slog.String("key", iter.Val()))
 		var card *Card
 		val, err := c.cache.Get(ctx, iter.Val()).Result()
+		if err != nil {
+			c.logger.Warn("cache get", slog.String("error", err.Error()), slog.String("key", iter.Val()))
+			continue
+		}
+		err = json.Unmarshal([]byte(val), &card)
+		if err == nil {
+			cards = append(cards, card)
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		c.logger.Error("iterate scan", slog.String("error", err.Error()), slog.String("key", iter.Val()))
+		return nil, err
+	}
+
+	return cards, nil
+}
+
+func (c *CachedSource) sscan(ctx context.Context, setKey, hashKey, pattern string) ([]*Card, error) {
+	var cards []*Card
+	cursor := uint64(0)
+
+	iter := c.cache.SScan(ctx, setKey, cursor, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		c.logger.Debug("key found", slog.String("key", iter.Val()))
+		var card *Card
+		val, err := c.cache.HGet(ctx, hashKey, iter.Val()).Result()
 		if err != nil {
 			c.logger.Warn("cache get", slog.String("error", err.Error()), slog.String("key", iter.Val()))
 			continue
