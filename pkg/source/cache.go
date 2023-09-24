@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jollyboss123/tcg_my-server/config"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"strings"
@@ -13,18 +14,20 @@ import (
 
 type CachedSource struct {
 	services []ScrapeService
+	gs       game.Service
 	cache    *redis.Client
 	cfg      *config.Config
 	logger   *slog.Logger
 }
 
-func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, service ...ScrapeService) *CachedSource {
+func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, gs game.Service, service ...ScrapeService) *CachedSource {
 	child := logger.With(slog.String("api", "cached-scrape"))
 	return &CachedSource{
 		services: service,
 		cache:    cache,
 		cfg:      cfg,
 		logger:   child,
+		gs:       gs,
 	}
 }
 
@@ -32,6 +35,11 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 // If the cache has entries for the given query, it fetches from the cache; otherwise, it fetches from services.
 func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
+	_, err := c.gs.Fetch(ctx, game)
+	if err != nil {
+		c.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("query", query), slog.String("game", game))
+		return make([]*Card, 0), err
+	}
 
 	if c.isQueryCached(ctx, query, game) {
 		c.logger.Info("cache hit", slog.String("query", query))
@@ -67,7 +75,7 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game strin
 	hashKey := fmt.Sprintf("game:data:%s", game)
 
 	patterns := []string{
-		fmt.Sprintf("*||*||*%s*", query), // for code
+		fmt.Sprintf("*||*||*%s*", query), // for code or booster
 		fmt.Sprintf("*||*%s*||*", query), // for name
 	}
 

@@ -54,6 +54,7 @@ func (s *Server) scrapeService() source.ScrapeService {
 		s.cache,
 		s.cfg,
 		s.log,
+		s.gameService(),
 		source.NewYYT(s.log, s.currencyService(), s.gameService()),
 		source.NewBigWeb(s.log),
 	)

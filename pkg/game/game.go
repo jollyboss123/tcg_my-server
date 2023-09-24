@@ -22,7 +22,8 @@ func (g Games) GameByCode(code string, logger *slog.Logger) (*Game, error) {
 
 func (g Games) FetchAll() []*Game {
 	var gamesSlice []*Game
-	for _, game := range g {
+	for k, game := range g {
+		game.Code = k
 		gamesSlice = append(gamesSlice, game)
 	}
 	return gamesSlice

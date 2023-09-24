@@ -7,3 +7,6 @@ type Currency {
     decimal: String!
     thousand: String!
 }
+
+#sample response
+#{decimal: ".", thousand: ",", code: USD, fraction: 2, numericCode: "840", grapheme: "$", template: "$1"}

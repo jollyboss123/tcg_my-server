@@ -142,10 +142,6 @@ func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 			card.Rarity = rarity
 			card.Name = el.ChildText("a > h4")
 			card.Source = source
-			//c, err := y.cs.Fetch(ctx, "JPY")
-			//if err != nil {
-			//	logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
-			//}
 			card.Currency = c
 			*cs = append(*cs, &card)
 

@@ -10,6 +10,7 @@ func ToGame(game *game.Game) *Game {
 	return &Game{
 		Title: game.Title,
 		Image: &game.Image,
+		Code:  GameCode(game.Code),
 	}
 }
 

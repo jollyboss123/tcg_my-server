@@ -36,8 +36,9 @@ type ExchangeRate struct {
 }
 
 type Game struct {
-	Title string  `json:"title"`
-	Image *string `json:"image,omitempty"`
+	Title string   `json:"title"`
+	Image *string  `json:"image,omitempty"`
+	Code  GameCode `json:"code"`
 }
 
 type GameCode string

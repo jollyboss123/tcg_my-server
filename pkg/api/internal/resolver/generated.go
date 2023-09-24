@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 	}
 
 	Game struct {
+		Code  func(childComplexity int) int
 		Image func(childComplexity int) int
 		Title func(childComplexity int) int
 	}
@@ -232,6 +233,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExchangeRate.To(childComplexity), true
+
+	case "Game.code":
+		if e.complexity.Game.Code == nil {
+			break
+		}
+
+		return e.complexity.Game.Code(childComplexity), true
 
 	case "Game.image":
 		if e.complexity.Game.Image == nil {
@@ -406,6 +414,9 @@ var sources = []*ast.Source{
     decimal: String!
     thousand: String!
 }
+
+#sample response
+#{decimal: ".", thousand: ",", code: USD, fraction: 2, numericCode: "840", grapheme: "$", template: "$1"}
 `, BuiltIn: false},
 	{Name: "../../../../schema/currency/exchangerate.graphql", Input: `type ExchangeRate {
     from: Currency!
@@ -416,6 +427,7 @@ var sources = []*ast.Source{
 	{Name: "../../../../schema/game/game.graphql", Input: `type Game {
     title: String!
     image: String
+    code: GameCode!
 }
 
 enum GameCode {
@@ -1491,6 +1503,50 @@ func (ec *executionContext) fieldContext_Game_image(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Game_code(ctx context.Context, field graphql.CollectedField, obj *model.Game) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Game_code(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.GameCode)
+	fc.Result = res
+	return ec.marshalNGameCode2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐGameCode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Game_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Game",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type GameCode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_cards(ctx, field)
 	if err != nil {
@@ -1793,6 +1849,8 @@ func (ec *executionContext) fieldContext_Query_games(ctx context.Context, field 
 				return ec.fieldContext_Game_title(ctx, field)
 			case "image":
 				return ec.fieldContext_Game_image(ctx, field)
+			case "code":
+				return ec.fieldContext_Game_code(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Game", field.Name)
 		},
@@ -3914,6 +3972,11 @@ func (ec *executionContext) _Game(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "image":
 			out.Values[i] = ec._Game_image(ctx, field, obj)
+		case "code":
+			out.Values[i] = ec._Game_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
