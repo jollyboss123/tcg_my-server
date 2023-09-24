@@ -1,4 +1,5 @@
 # TCG.MY
+[![Go](https://github.com/jollyboss123/tcg_my-server/actions/workflows/go.yml/badge.svg)](https://github.com/jollyboss123/tcg_my-server/actions/workflows/go.yml)
 
 Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh OCG cards' price by
 scraping data
