@@ -65,6 +65,10 @@ func (c *CachedSource) cacheQuery(ctx context.Context, query, game string) error
 	if err != nil {
 		return err
 	}
+	err = c.cache.Expire(ctx, fmt.Sprintf("query:%s", game), c.cfg.Cache.CacheTime).Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -152,6 +156,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 
 	// Assign scores based on rarity. Assuming the list is sorted such that
 	// the rarest card is first and the least rare card is last.
+	// The rarer the card, the higher the score.
 	for idx, card := range cards {
 		card.Score = len(cards) - idx
 		_ = c.cacheQuery(ctx, card.Name, game)
@@ -166,6 +171,11 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 			c.logger.Warn("set add cache", slog.String("error", err.Error()), slog.String("query", query))
 			continue
 		}
+		err = c.cache.Expire(ctx, setKey, c.cfg.Cache.CacheTime).Err()
+		if err != nil {
+			c.logger.Warn("set sets cache expiry", slog.String("error", err.Error()), slog.String("query", query))
+			continue
+		}
 		data, err := json.Marshal(card)
 		if err != nil {
 			c.logger.Warn("marshal cache data", slog.String("error", err.Error()), slog.String("query", query))
@@ -174,6 +184,11 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 		err = c.cache.HSet(ctx, hashKey, uID, data).Err()
 		if err != nil {
 			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
+			continue
+		}
+		err = c.cache.Expire(ctx, hashKey, c.cfg.Cache.CacheTime).Err()
+		if err != nil {
+			c.logger.Warn("set hash set cache expiry", slog.String("error", err.Error()), slog.String("query", query))
 			continue
 		}
 	}

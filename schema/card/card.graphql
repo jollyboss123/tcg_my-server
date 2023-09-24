@@ -7,5 +7,5 @@ type Card {
     source: String!
     currency: Currency!
     image: String
-    score: Int
+    score: Int #based on rarity, the higher the score, the rarer the card
 }
