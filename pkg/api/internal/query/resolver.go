@@ -31,8 +31,8 @@ func NewQueryResolver(
 	}
 }
 
-func (q queryResolver) Cards(ctx context.Context, query, game string) ([]*model.Card, error) {
-	cards, err := q.scrape.List(ctx, query, game)
+func (q queryResolver) Cards(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error) {
+	cards, err := q.scrape.List(ctx, query, string(game))
 	if err != nil {
 		return nil, err
 	}

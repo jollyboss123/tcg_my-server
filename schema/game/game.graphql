@@ -2,3 +2,11 @@ type Game {
     title: String!
     image: String
 }
+
+enum GameCode {
+    YGO
+    POC
+    VG
+    OPC
+    WS
+}

@@ -2,6 +2,12 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type Card struct {
 	Code      string    `json:"code"`
 	Name      string    `json:"name"`
@@ -32,4 +38,51 @@ type ExchangeRate struct {
 type Game struct {
 	Title string  `json:"title"`
 	Image *string `json:"image,omitempty"`
+}
+
+type GameCode string
+
+const (
+	GameCodeYgo GameCode = "YGO"
+	GameCodePoc GameCode = "POC"
+	GameCodeVg  GameCode = "VG"
+	GameCodeOpc GameCode = "OPC"
+	GameCodeWs  GameCode = "WS"
+)
+
+var AllGameCode = []GameCode{
+	GameCodeYgo,
+	GameCodePoc,
+	GameCodeVg,
+	GameCodeOpc,
+	GameCodeWs,
+}
+
+func (e GameCode) IsValid() bool {
+	switch e {
+	case GameCodeYgo, GameCodePoc, GameCodeVg, GameCodeOpc, GameCodeWs:
+		return true
+	}
+	return false
+}
+
+func (e GameCode) String() string {
+	return string(e)
+}
+
+func (e *GameCode) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GameCode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GameCode", str)
+	}
+	return nil
+}
+
+func (e GameCode) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

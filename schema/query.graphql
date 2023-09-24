@@ -2,7 +2,7 @@ type Query {
     """
     Use this query to find cards
     """
-    cards(query: String!, game: String!): [Card!]!
+    cards(query: String!, game: GameCode!): [Card!]!
     """
     Use this query to find single currency
     """

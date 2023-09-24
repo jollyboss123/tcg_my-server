@@ -76,7 +76,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cards         func(childComplexity int, query string, game string) int
+		Cards         func(childComplexity int, query string, game model.GameCode) int
 		Currency      func(childComplexity int, code string) int
 		ExchangeRate  func(childComplexity int, base string, to string) int
 		ExchangeRates func(childComplexity int) int
@@ -85,7 +85,7 @@ type ComplexityRoot struct {
 }
 
 type QueryResolver interface {
-	Cards(ctx context.Context, query string, game string) ([]*model.Card, error)
+	Cards(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error)
 	Currency(ctx context.Context, code string) (*model.Currency, error)
 	ExchangeRate(ctx context.Context, base string, to string) (*model.ExchangeRate, error)
 	ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error)
@@ -257,7 +257,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Cards(childComplexity, args["query"].(string), args["game"].(string)), true
+		return e.complexity.Query.Cards(childComplexity, args["query"].(string), args["game"].(model.GameCode)), true
 
 	case "Query.currency":
 		if e.complexity.Query.Currency == nil {
@@ -417,12 +417,20 @@ var sources = []*ast.Source{
     title: String!
     image: String
 }
+
+enum GameCode {
+    YGO
+    POC
+    VG
+    OPC
+    WS
+}
 `, BuiltIn: false},
 	{Name: "../../../../schema/query.graphql", Input: `type Query {
     """
     Use this query to find cards
     """
-    cards(query: String!, game: String!): [Card!]!
+    cards(query: String!, game: GameCode!): [Card!]!
     """
     Use this query to find single currency
     """
@@ -475,10 +483,10 @@ func (ec *executionContext) field_Query_cards_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["query"] = arg0
-	var arg1 string
+	var arg1 model.GameCode
 	if tmp, ok := rawArgs["game"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("game"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		arg1, err = ec.unmarshalNGameCode2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐGameCode(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1497,7 +1505,7 @@ func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Cards(rctx, fc.Args["query"].(string), fc.Args["game"].(string))
+		return ec.resolvers.Query().Cards(rctx, fc.Args["query"].(string), fc.Args["game"].(model.GameCode))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4623,6 +4631,16 @@ func (ec *executionContext) marshalNGame2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_my
 		return graphql.Null
 	}
 	return ec._Game(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNGameCode2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐGameCode(ctx context.Context, v interface{}) (model.GameCode, error) {
+	var res model.GameCode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNGameCode2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐGameCode(ctx context.Context, sel ast.SelectionSet, v model.GameCode) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
