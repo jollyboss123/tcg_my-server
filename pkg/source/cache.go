@@ -33,9 +33,9 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
 
-	if c.isQueryCached(ctx, query) {
+	if c.isQueryCached(ctx, query, game) {
 		c.logger.Info("cache hit", slog.String("query", query))
-		return c.fetchFromDataCache(ctx, query)
+		return c.fetchFromDataCache(ctx, query, game)
 	}
 
 	c.logger.Info("cache miss", slog.String("query", query))
@@ -47,26 +47,26 @@ func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, e
 	return cards, nil
 }
 
-func (c *CachedSource) isQueryCached(ctx context.Context, query string) bool {
-	exists, err := c.cache.Exists(ctx, fmt.Sprintf("query:%s", query)).Result()
-	return err == nil && exists > 0
+func (c *CachedSource) isQueryCached(ctx context.Context, query, game string) bool {
+	exists, err := c.cache.SIsMember(ctx, fmt.Sprintf("query:%s", game), query).Result()
+	return err == nil && exists
 }
 
-func (c *CachedSource) cacheQuery(ctx context.Context, query string) error {
-	err := c.cache.Set(ctx, fmt.Sprintf("query:%s", query), "true", c.cfg.Cache.CacheTime).Err()
+func (c *CachedSource) cacheQuery(ctx context.Context, query, game string) error {
+	err := c.cache.SAdd(ctx, fmt.Sprintf("query:%s", game), query).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *CachedSource) fetchFromDataCache(ctx context.Context, query string) ([]*Card, error) {
+func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
 
 	patterns := []string{
-		fmt.Sprintf("*||*%s*", query),    // for code
-		fmt.Sprintf("*||*%s*||*", query), // for name
+		fmt.Sprintf("%s||*||*||*%s*", game, query), // for code
+		fmt.Sprintf("%s||*||*%s*||*", game, query), // for name
 	}
 
 	wg := &sync.WaitGroup{}
@@ -141,9 +141,9 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 	}
 
 	for _, card := range cards {
-		cacheKey := fmt.Sprintf("%s||%s||%s", card.Rarity, card.Name, card.Code)
-		_ = c.cacheQuery(ctx, card.Name)
-		_ = c.cacheQuery(ctx, card.Code)
+		cacheKey := fmt.Sprintf("%s||%s||%s||%s", game, card.Rarity, card.Name, card.Code)
+		_ = c.cacheQuery(ctx, card.Name, game)
+		_ = c.cacheQuery(ctx, card.Code, game)
 		cacheEntry, err := json.Marshal(card)
 		if err != nil {
 			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
@@ -156,7 +156,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 		}
 	}
 	c.logger.Info("cache entry", slog.String("query", query), slog.Int("total", len(cards)))
-	_ = c.cacheQuery(ctx, query)
+	_ = c.cacheQuery(ctx, query, game)
 	return cards, nil
 }
 
