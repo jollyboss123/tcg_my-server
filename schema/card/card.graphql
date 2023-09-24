@@ -7,4 +7,5 @@ type Card {
     source: String!
     currency: Currency!
     image: String
+    score: Int
 }

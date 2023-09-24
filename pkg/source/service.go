@@ -18,4 +18,5 @@ type Card struct {
 	Source    string
 	Currency  *currency.Currency
 	Image     string
+	Score     int
 }

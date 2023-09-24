@@ -71,7 +71,7 @@ func (y *YYT) List(ctx context.Context, query, game string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, y.logger, g.ImageEndpoint))
+	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, g.ImageEndpoint, y.logger))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -116,7 +116,7 @@ func (y *YYT) List(ctx context.Context, query, game string) ([]*Card, error) {
 	}
 }
 
-func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source string, logger *slog.Logger, imageURL string) func(*colly.HTMLElement) {
+func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source, imageURL string, logger *slog.Logger) func(*colly.HTMLElement) {
 	c, err := y.cs.Fetch(ctx, "JPY")
 	if err != nil {
 		logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
@@ -131,8 +131,8 @@ func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 				errCh <- err
 				return
 			}
-			imgurl := el.ChildAttr("a", "href")
-			id := strings.Split(imgurl, "/card/")
+			imgURL := el.ChildAttr("a", "href")
+			id := strings.Split(imgURL, "/card/")
 			if len(id) > 1 {
 				card.Image = imageURL + id[1] + ".jpg"
 			} else {

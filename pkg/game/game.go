@@ -16,6 +16,7 @@ func (g Games) GameByCode(code string, logger *slog.Logger) (*Game, error) {
 		logger.Error("fetch game", slog.String("error", ErrGameNotFound.Error()), slog.String("code", code))
 		return nil, ErrGameNotFound
 	}
+	sc.Code = code
 
 	return sc, nil
 }

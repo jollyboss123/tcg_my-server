@@ -17,6 +17,7 @@ type Card struct {
 	Source    string    `json:"source"`
 	Currency  *Currency `json:"currency"`
 	Image     *string   `json:"image,omitempty"`
+	Score     *int      `json:"score,omitempty"`
 }
 
 type Currency struct {

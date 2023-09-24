@@ -150,9 +150,13 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 		return cards, nil
 	}
 
-	for _, card := range cards {
+	// Assign scores based on rarity. Assuming the list is sorted such that
+	// the rarest card is first and the least rare card is last.
+	for idx, card := range cards {
+		card.Score = len(cards) - idx
 		_ = c.cacheQuery(ctx, card.Name, game)
 		_ = c.cacheQuery(ctx, card.Code, game)
+
 		uID := fmt.Sprintf("%s||%s||%s", card.Rarity, card.Name, card.Code)
 		setKey := fmt.Sprintf("game:identifiers:%s", game)
 		hashKey := fmt.Sprintf("game:data:%s", game)
@@ -164,10 +168,14 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 		}
 		data, err := json.Marshal(card)
 		if err != nil {
-			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
+			c.logger.Warn("marshal cache data", slog.String("error", err.Error()), slog.String("query", query))
 			continue
 		}
 		err = c.cache.HSet(ctx, hashKey, uID, data).Err()
+		if err != nil {
+			c.logger.Warn("cache entry", slog.String("error", err.Error()), slog.String("query", query))
+			continue
+		}
 	}
 	c.logger.Info("cache entry", slog.String("query", query), slog.Int("total", len(cards)))
 	_ = c.cacheQuery(ctx, query, game)
