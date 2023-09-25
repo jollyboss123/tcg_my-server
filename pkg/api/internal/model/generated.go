@@ -9,15 +9,16 @@ import (
 )
 
 type Card struct {
-	Code      string    `json:"code"`
-	Name      string    `json:"name"`
-	Rarity    string    `json:"rarity"`
-	Condition *string   `json:"condition,omitempty"`
-	Price     int       `json:"price"`
-	Source    string    `json:"source"`
-	Currency  *Currency `json:"currency"`
-	Image     *string   `json:"image,omitempty"`
-	Score     *int      `json:"score,omitempty"`
+	Code      string      `json:"code"`
+	Name      string      `json:"name"`
+	Rarity    string      `json:"rarity"`
+	Condition *string     `json:"condition,omitempty"`
+	Price     int         `json:"price"`
+	Source    string      `json:"source"`
+	Currency  *Currency   `json:"currency"`
+	Image     *string     `json:"image,omitempty"`
+	Score     *int        `json:"score,omitempty"`
+	Detail    *DetailInfo `json:"detail,omitempty"`
 }
 
 type Currency struct {
@@ -28,6 +29,10 @@ type Currency struct {
 	Template    string `json:"template"`
 	Decimal     string `json:"decimal"`
 	Thousand    string `json:"thousand"`
+}
+
+type DetailInfo struct {
+	Ability *string `json:"ability,omitempty"`
 }
 
 type ExchangeRate struct {

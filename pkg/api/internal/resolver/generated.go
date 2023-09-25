@@ -36,6 +36,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Card() CardResolver
 	Query() QueryResolver
 }
 
@@ -47,6 +48,7 @@ type ComplexityRoot struct {
 		Code      func(childComplexity int) int
 		Condition func(childComplexity int) int
 		Currency  func(childComplexity int) int
+		Detail    func(childComplexity int, game model.GameCode) int
 		Image     func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Price     func(childComplexity int) int
@@ -63,6 +65,10 @@ type ComplexityRoot struct {
 		NumericCode func(childComplexity int) int
 		Template    func(childComplexity int) int
 		Thousand    func(childComplexity int) int
+	}
+
+	DetailInfo struct {
+		Ability func(childComplexity int) int
 	}
 
 	ExchangeRate struct {
@@ -86,6 +92,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CardResolver interface {
+	Detail(ctx context.Context, obj *model.Card, game model.GameCode) (*model.DetailInfo, error)
+}
 type QueryResolver interface {
 	Cards(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error)
 	Currency(ctx context.Context, code string) (*model.Currency, error)
@@ -129,6 +138,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Card.Currency(childComplexity), true
+
+	case "Card.detail":
+		if e.complexity.Card.Detail == nil {
+			break
+		}
+
+		args, err := ec.field_Card_detail_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Card.Detail(childComplexity, args["game"].(model.GameCode)), true
 
 	case "Card.image":
 		if e.complexity.Card.Image == nil {
@@ -220,6 +241,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Currency.Thousand(childComplexity), true
+
+	case "DetailInfo.ability":
+		if e.complexity.DetailInfo.Ability == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Ability(childComplexity), true
 
 	case "ExchangeRate.from":
 		if e.complexity.ExchangeRate.From == nil {
@@ -411,7 +439,12 @@ var sources = []*ast.Source{
     source: String!
     currency: Currency!
     image: String
-    score: Int
+    score: Int #based on rarity, the higher the score, the rarer the card
+    detail(game: GameCode!): DetailInfo @goField(forceResolver: true)
+}
+
+type DetailInfo {
+    ability: String
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/currency/currency.graphql", Input: `type Currency {
@@ -432,6 +465,12 @@ var sources = []*ast.Source{
     to: Currency!
     rate: Float!
 }
+`, BuiltIn: false},
+	{Name: "../../../../schema/directive/gofield.graphql", Input: `directive @goField(
+    forceResolver: Boolean,
+    name: String,
+    omittable: Boolean
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 `, BuiltIn: false},
 	{Name: "../../../../schema/game/game.graphql", Input: `type Game {
     title: String!
@@ -476,6 +515,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Card_detail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.GameCode
+	if tmp, ok := rawArgs["game"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("game"))
+		arg0, err = ec.unmarshalNGameCode2githubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐGameCode(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["game"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -996,6 +1050,62 @@ func (ec *executionContext) fieldContext_Card_score(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Card_detail(ctx context.Context, field graphql.CollectedField, obj *model.Card) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Card_detail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Card().Detail(rctx, obj, fc.Args["game"].(model.GameCode))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DetailInfo)
+	fc.Result = res
+	return ec.marshalODetailInfo2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐDetailInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Card_detail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Card",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ability":
+				return ec.fieldContext_DetailInfo_ability(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DetailInfo", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Card_detail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Currency_code(ctx, field)
 	if err != nil {
@@ -1294,6 +1404,47 @@ func (ec *executionContext) _Currency_thousand(ctx context.Context, field graphq
 func (ec *executionContext) fieldContext_Currency_thousand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Currency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_ability(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ability, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_ability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1654,6 +1805,8 @@ func (ec *executionContext) fieldContext_Query_cards(ctx context.Context, field 
 				return ec.fieldContext_Card_image(ctx, field)
 			case "score":
 				return ec.fieldContext_Card_score(ctx, field)
+			case "detail":
+				return ec.fieldContext_Card_detail(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Card", field.Name)
 		},
@@ -3834,39 +3987,72 @@ func (ec *executionContext) _Card(ctx context.Context, sel ast.SelectionSet, obj
 		case "code":
 			out.Values[i] = ec._Card_code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Card_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "rarity":
 			out.Values[i] = ec._Card_rarity(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "condition":
 			out.Values[i] = ec._Card_condition(ctx, field, obj)
 		case "price":
 			out.Values[i] = ec._Card_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "source":
 			out.Values[i] = ec._Card_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "currency":
 			out.Values[i] = ec._Card_currency(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "image":
 			out.Values[i] = ec._Card_image(ctx, field, obj)
 		case "score":
 			out.Values[i] = ec._Card_score(ctx, field, obj)
+		case "detail":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Card_detail(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3936,6 +4122,42 @@ func (ec *executionContext) _Currency(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var detailInfoImplementors = []string{"DetailInfo"}
+
+func (ec *executionContext) _DetailInfo(ctx context.Context, sel ast.SelectionSet, obj *model.DetailInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, detailInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DetailInfo")
+		case "ability":
+			out.Values[i] = ec._DetailInfo_ability(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5067,6 +5289,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalODetailInfo2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐDetailInfo(ctx context.Context, sel ast.SelectionSet, v *model.DetailInfo) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DetailInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

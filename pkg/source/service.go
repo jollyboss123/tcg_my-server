@@ -7,6 +7,7 @@ import (
 
 type ScrapeService interface {
 	List(ctx context.Context, query, game string) ([]*Card, error)
+	Fetch(ctx context.Context, code, game string) (*DetailInfo, error)
 }
 
 type Card struct {
@@ -19,4 +20,8 @@ type Card struct {
 	Currency  *currency.Currency
 	Image     string
 	Score     int
+}
+
+type DetailInfo struct {
+	Ability string
 }

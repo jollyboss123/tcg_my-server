@@ -22,7 +22,7 @@ type service struct {
 	logger *slog.Logger
 }
 
-func NewService(logger *slog.Logger) *service {
+func NewService(logger *slog.Logger) Service {
 	child := logger.With(slog.String("api", "game"))
 	return &service{
 		logger: child,

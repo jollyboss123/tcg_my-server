@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/card"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/query"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/resolver"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
@@ -19,6 +20,7 @@ func newConfig(
 	return resolver.Config{
 		Resolvers: &resolverRoot{
 			queryResolver: query.NewQueryResolver(scrape, currency, rate, game),
+			cardResolver:  card.NewCardResolver(scrape),
 		},
 	}
 }

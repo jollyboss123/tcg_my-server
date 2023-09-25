@@ -31,7 +31,7 @@ func NewQueryResolver(
 	}
 }
 
-func (q queryResolver) Cards(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error) {
+func (q *queryResolver) Cards(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error) {
 	cards, err := q.scrape.List(ctx, query, string(game))
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (q queryResolver) Cards(ctx context.Context, query string, game model.GameC
 	return model.ToCards(cards), nil
 }
 
-func (q queryResolver) Currency(ctx context.Context, code string) (*model.Currency, error) {
+func (q *queryResolver) Currency(ctx context.Context, code string) (*model.Currency, error) {
 	c, err := q.currency.Fetch(ctx, code)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (q queryResolver) Currency(ctx context.Context, code string) (*model.Curren
 	return model.ToCurrency(c), nil
 }
 
-func (q queryResolver) ExchangeRate(ctx context.Context, base, to string) (*model.ExchangeRate, error) {
+func (q *queryResolver) ExchangeRate(ctx context.Context, base, to string) (*model.ExchangeRate, error) {
 	r, err := q.rate.Fetch(ctx, base, to)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (q queryResolver) ExchangeRate(ctx context.Context, base, to string) (*mode
 	return model.ToRate(r), nil
 }
 
-func (q queryResolver) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error) {
+func (q *queryResolver) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error) {
 	rs, err := q.rate.List(ctx)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (q queryResolver) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate
 	return model.ToRates(rs), nil
 }
 
-func (q queryResolver) Games(ctx context.Context) ([]*model.Game, error) {
+func (q *queryResolver) Games(ctx context.Context) ([]*model.Game, error) {
 	gs, err := q.game.FetchAll(ctx)
 	if err != nil {
 		return nil, err

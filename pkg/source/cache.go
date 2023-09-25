@@ -7,12 +7,13 @@ import (
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"log/slog"
 	"strings"
 	"sync"
 )
 
-type CachedSource struct {
+type cachedSource struct {
 	services []ScrapeService
 	gs       game.Service
 	cache    *redis.Client
@@ -20,9 +21,9 @@ type CachedSource struct {
 	logger   *slog.Logger
 }
 
-func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, gs game.Service, service ...ScrapeService) *CachedSource {
+func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, gs game.Service, service ...ScrapeService) ScrapeService {
 	child := logger.With(slog.String("api", "cached-scrape"))
-	return &CachedSource{
+	return &cachedSource{
 		services: service,
 		cache:    cache,
 		cfg:      cfg,
@@ -33,7 +34,7 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 
 // List fetches cards based on the provided query from the cache or from external services.
 // If the cache has entries for the given query, it fetches from the cache; otherwise, it fetches from services.
-func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, error) {
+func (c *cachedSource) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
 	_, err := c.gs.Fetch(ctx, game)
 	if err != nil {
@@ -55,12 +56,21 @@ func (c *CachedSource) List(ctx context.Context, query, game string) ([]*Card, e
 	return cards, nil
 }
 
-func (c *CachedSource) isQueryCached(ctx context.Context, query, game string) bool {
+func (c *cachedSource) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
+	log.Printf("code: %s\n", code)
+	log.Printf("game: %s\n", game)
+
+	return &DetailInfo{
+		Ability: "hi",
+	}, nil
+}
+
+func (c *cachedSource) isQueryCached(ctx context.Context, query, game string) bool {
 	exists, err := c.cache.SIsMember(ctx, fmt.Sprintf("query:%s", game), query).Result()
 	return err == nil && exists
 }
 
-func (c *CachedSource) cacheQuery(ctx context.Context, query, game string) error {
+func (c *cachedSource) cacheQuery(ctx context.Context, query, game string) error {
 	err := c.cache.SAdd(ctx, fmt.Sprintf("query:%s", game), query).Err()
 	if err != nil {
 		return err
@@ -72,7 +82,7 @@ func (c *CachedSource) cacheQuery(ctx context.Context, query, game string) error
 	return nil
 }
 
-func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game string) ([]*Card, error) {
+func (c *cachedSource) fetchFromDataCache(ctx context.Context, query, game string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
 	setKey := fmt.Sprintf("game:identifiers:%s", game)
@@ -124,7 +134,7 @@ func (c *CachedSource) fetchFromDataCache(ctx context.Context, query, game strin
 	return cards, nil
 }
 
-func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([]*Card, error) {
+func (c *cachedSource) fetchAndCache(ctx context.Context, query, game string) ([]*Card, error) {
 	var cards []*Card
 	var mu sync.Mutex
 
@@ -197,7 +207,7 @@ func (c *CachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 	return cards, nil
 }
 
-func (c *CachedSource) scan(ctx context.Context, pattern string) ([]*Card, error) {
+func (c *cachedSource) scan(ctx context.Context, pattern string) ([]*Card, error) {
 	var cards []*Card
 	cursor := uint64(0)
 
@@ -224,7 +234,7 @@ func (c *CachedSource) scan(ctx context.Context, pattern string) ([]*Card, error
 	return cards, nil
 }
 
-func (c *CachedSource) sscan(ctx context.Context, setKey, hashKey, pattern string) ([]*Card, error) {
+func (c *cachedSource) sscan(ctx context.Context, setKey, hashKey, pattern string) ([]*Card, error) {
 	var cards []*Card
 	cursor := uint64(0)
 

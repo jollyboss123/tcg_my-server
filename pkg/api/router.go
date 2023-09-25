@@ -56,7 +56,7 @@ func (s *Server) scrapeService() source.ScrapeService {
 		s.log,
 		s.gameService(),
 		source.NewYYT(s.log, s.currencyService(), s.gameService()),
-		source.NewBigWeb(s.log),
+		//source.NewBigWeb(s.log), //disabled bigweb for now
 	)
 }
 

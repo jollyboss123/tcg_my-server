@@ -31,3 +31,12 @@ func ToCards(cards []*source.Card) []*Card {
 	}
 	return res
 }
+
+func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
+	if d == nil {
+		return nil
+	}
+	return &DetailInfo{
+		Ability: &d.Ability,
+	}
+}

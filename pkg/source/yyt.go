@@ -6,6 +6,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
+	"log"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -15,16 +16,16 @@ import (
 	"unicode"
 )
 
-type YYT struct {
+type yyt struct {
 	source string
 	logger *slog.Logger
 	cs     currency.Service
 	gs     game.Service
 }
 
-func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service) *YYT {
+func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service) ScrapeService {
 	child := logger.With(slog.String("api", "yyt"))
-	return &YYT{
+	return &yyt{
 		source: "Yuyu-tei",
 		logger: child,
 		cs:     cs,
@@ -34,7 +35,7 @@ func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service) *YYT {
 
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
-func (y *YYT) List(ctx context.Context, query, game string) ([]*Card, error) {
+func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	query = strings.ToUpper(query)
 	g, err := y.gs.Fetch(ctx, game)
 	if err != nil {
@@ -116,7 +117,16 @@ func (y *YYT) List(ctx context.Context, query, game string) ([]*Card, error) {
 	}
 }
 
-func (y *YYT) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source, imageURL string, logger *slog.Logger) func(*colly.HTMLElement) {
+func (y *yyt) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
+	log.Printf("code: %s\n", code)
+	log.Printf("game: %s\n", game)
+
+	return &DetailInfo{
+		Ability: "hi",
+	}, nil
+}
+
+func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source, imageURL string, logger *slog.Logger) func(*colly.HTMLElement) {
 	c, err := y.cs.Fetch(ctx, "JPY")
 	if err != nil {
 		logger.Warn("failed to fetch currency", slog.String("error", err.Error()))

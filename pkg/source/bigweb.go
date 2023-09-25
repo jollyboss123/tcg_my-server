@@ -9,15 +9,15 @@ import (
 	"net/url"
 )
 
-type BigWeb struct {
+type bigWeb struct {
 	endpoint string
 	source   string
 	logger   *slog.Logger
 }
 
-func NewBigWeb(logger *slog.Logger) *BigWeb {
+func NewBigWeb(logger *slog.Logger) ScrapeService {
 	child := logger.With(slog.String("api", "bigweb"))
-	return &BigWeb{
+	return &bigWeb{
 		endpoint: "https://api.bigweb.co.jp/products",
 		source:   "bigweb",
 		logger:   child,
@@ -29,7 +29,7 @@ var (
 	ErrCardDataFormat = errors.New("unexpected card data format")
 )
 
-func (b *BigWeb) List(ctx context.Context, query, game string) ([]*Card, error) {
+func (b *bigWeb) List(ctx context.Context, query, game string) ([]*Card, error) {
 	baseURL, err := url.Parse(b.endpoint)
 	if err != nil {
 		b.logger.Error("parsing url", err.Error(), slog.String("url", b.endpoint))
@@ -120,4 +120,8 @@ func (b *BigWeb) List(ctx context.Context, query, game string) ([]*Card, error) 
 	default:
 		return c, nil
 	}
+}
+
+func (b *bigWeb) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
+	return &DetailInfo{}, nil
 }

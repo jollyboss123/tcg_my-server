@@ -29,7 +29,7 @@ type service struct {
 	currencyService currency.Service
 }
 
-func NewService(logger *slog.Logger, cfg *config.Config, currencyService currency.Service) *service {
+func NewService(logger *slog.Logger, cfg *config.Config, currencyService currency.Service) Service {
 	child := logger.With(slog.String("api", "exchange-rate"))
 	return &service{
 		endpoint:        cfg.Rates.Endpoint,

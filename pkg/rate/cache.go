@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-type CachedExchangeRate struct {
+type cachedExchangeRate struct {
 	service         Service
 	cache           *redis.Client
 	cfg             *config.Config
@@ -20,9 +20,9 @@ type CachedExchangeRate struct {
 	currencyService currency.Service
 }
 
-func NewCachedExchangeRate(service Service, cache *redis.Client, cfg *config.Config, logger *slog.Logger, currencyService currency.Service) *CachedExchangeRate {
+func NewCachedExchangeRate(service Service, cache *redis.Client, cfg *config.Config, logger *slog.Logger, currencyService currency.Service) Service {
 	child := logger.With(slog.String("api", "cached-exchange-rate"))
-	return &CachedExchangeRate{
+	return &cachedExchangeRate{
 		service:         service,
 		cache:           cache,
 		cfg:             cfg,
@@ -31,7 +31,7 @@ func NewCachedExchangeRate(service Service, cache *redis.Client, cfg *config.Con
 	}
 }
 
-func (c *CachedExchangeRate) Fetch(ctx context.Context, base, to string) (*ExchangeRate, error) {
+func (c *cachedExchangeRate) Fetch(ctx context.Context, base, to string) (*ExchangeRate, error) {
 	base = strings.ToUpper(base)
 	to = strings.ToUpper(to)
 
@@ -82,7 +82,7 @@ func (c *CachedExchangeRate) Fetch(ctx context.Context, base, to string) (*Excha
 }
 
 // fetchAndRefreshCache will handle cache misses for Fetch
-func (c *CachedExchangeRate) fetchAndRefreshCache(ctx context.Context, base, to string) (*ExchangeRate, error) {
+func (c *cachedExchangeRate) fetchAndRefreshCache(ctx context.Context, base, to string) (*ExchangeRate, error) {
 	var br, dr *ExchangeRate
 	cache, err := c.fetchAndCache(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (c *CachedExchangeRate) fetchAndRefreshCache(ctx context.Context, base, to 
 	}, nil
 }
 
-func (c *CachedExchangeRate) List(ctx context.Context) ([]*ExchangeRate, error) {
+func (c *cachedExchangeRate) List(ctx context.Context) ([]*ExchangeRate, error) {
 	val, err := c.cache.Get(ctx, "rates").Result()
 	if err != nil {
 		c.logger.Error("get cache", slog.String("error", err.Error()))
@@ -142,7 +142,7 @@ func (c *CachedExchangeRate) List(ctx context.Context) ([]*ExchangeRate, error) 
 	return res, nil
 }
 
-func (c *CachedExchangeRate) fetchAndCache(ctx context.Context) ([]*ExchangeRate, error) {
+func (c *cachedExchangeRate) fetchAndCache(ctx context.Context) ([]*ExchangeRate, error) {
 	rates, err := c.service.List(ctx)
 	if err != nil {
 		c.logger.Error("list rates", slog.String("error", err.Error()))

@@ -8,4 +8,9 @@ type Card {
     currency: Currency!
     image: String
     score: Int #based on rarity, the higher the score, the rarer the card
+    detail(game: GameCode!): DetailInfo @goField(forceResolver: true)
+}
+
+type DetailInfo {
+    ability: String
 }
