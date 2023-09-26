@@ -21,10 +21,10 @@ func NewCardResolver(d source.DetailService) resolver.CardResolver {
 
 func (c *cardResolver) Detail(ctx context.Context, obj *model.Card, game model.GameCode) (*model.DetailInfo, error) {
 	key := fmt.Sprintf("%s|%s", obj.Code, game.String())
-	userLoader, err := middleware.DetailLoaderFromContext(ctx)
+	detailLoader, err := middleware.DetailLoaderFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return userLoader.Load(ctx, key)()
+	return detailLoader.Load(ctx, key)()
 }

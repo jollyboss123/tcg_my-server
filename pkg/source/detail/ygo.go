@@ -51,13 +51,58 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 		return nil, err
 	}
 
-	var lore string
+	var detail source.DetailInfo
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div .lore", func(e *colly.HTMLElement) {
-		lore = e.ChildText("p")
-		y.logger.Info("detail info", slog.String("lore", lore))
+	c.OnHTML("div .card-table-columns", func(e *colly.HTMLElement) {
+		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
+			header := el.ChildText("th")
+			y.logger.Info("header: " + header)
+			switch header {
+			case "Card type":
+				detail.CardType = el.ChildText("td > a")
+			case "Attribute":
+				detail.Attribute = el.ChildText("td > a")
+			case "Property":
+				detail.Property = el.ChildText("td > a")
+			case "Types":
+				el.ForEach("td > a", func(_ int, ele *colly.HTMLElement) {
+					detail.Types = append(detail.Types, ele.Text)
+				})
+			case "Link Arrows":
+				el.ForEach("td > div > div:nth-child(2)", func(_ int, ele *colly.HTMLElement) {
+					detail.LinkArrows = ele.ChildText("a")
+				})
+			case "Pendulum Scale":
+				detail.Pendulum.Scale = el.ChildText("td > a:nth-child(2)")
+				y.logger.Info("pendulum: " + detail.Pendulum.Scale)
+			case "ATK / LINK":
+				p := el.ChildTexts("td > a")
+				detail.Atk = p[0]
+				detail.Link = p[1]
+			case "ATK / DEF":
+				p := el.ChildTexts("td > a")
+				detail.Atk = p[0]
+				detail.Def = p[1]
+			case "Level":
+				fallthrough
+			case "Rank":
+				detail.Level = el.ChildText("td > a:nth-child(1)")
+			case "Effect types":
+				el.ForEach("li", func(_ int, ele *colly.HTMLElement) {
+					detail.Effects = append(detail.Effects, ele.ChildText("a"))
+				})
+			case "Status":
+				el.ForEach("i", func(_ int, ele *colly.HTMLElement) {
+					if strings.TrimSpace(ele.Text) == "OCG" {
+						detail.Status = ele.DOM.Prev().Text()
+					}
+				})
+			}
+		})
+
+		detail.Ability = e.ChildText("div .lore p")
 	})
 
 	var mu sync.Mutex
@@ -99,6 +144,6 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	case err := <-errCh:
 		return nil, err
 	case <-done:
-		return &source.DetailInfo{Ability: lore}, nil
+		return &detail, nil
 	}
 }

@@ -140,12 +140,12 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 			}
 			card.Price = price
 			card.Rarity = rarity
-			card.Name = el.ChildText("a > h4")
+			card.JpName = el.ChildText("a > h4")
 			card.Source = source
 			card.Currency = c
 			*cs = append(*cs, &card)
 
-			logger.Debug("card info", slog.String("name", card.Name),
+			logger.Debug("card info", slog.String("name", card.JpName),
 				slog.String("code", card.Code),
 				slog.String("rarity", card.Rarity),
 				slog.String("condition", card.Condition),

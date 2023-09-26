@@ -1,6 +1,6 @@
 type Card {
     code: String!
-    name: String!
+    jpName: String!
     rarity: String!
     condition: String
     price: Int!
@@ -12,5 +12,23 @@ type Card {
 }
 
 type DetailInfo {
-    ability: String
+    engName: String
+    cardType: String
+    property: String
+    attribute: String
+    types: [String]
+    level: String #level or rank
+    linkArrows: String
+    attack: String
+    defence: String
+    link: String
+    effects: [String] #effect types
+    ability: String #card effect
+    pendulum: Pendulum
+    status: String #ban status
+}
+
+type Pendulum {
+    effects: [String] #effect types
+    scale: String
 }

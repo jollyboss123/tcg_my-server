@@ -10,7 +10,7 @@ import (
 
 type Card struct {
 	Code      string      `json:"code"`
-	Name      string      `json:"name"`
+	JpName    string      `json:"jpName"`
 	Rarity    string      `json:"rarity"`
 	Condition *string     `json:"condition,omitempty"`
 	Price     int         `json:"price"`
@@ -32,7 +32,20 @@ type Currency struct {
 }
 
 type DetailInfo struct {
-	Ability *string `json:"ability,omitempty"`
+	EngName    *string   `json:"engName,omitempty"`
+	CardType   *string   `json:"cardType,omitempty"`
+	Property   *string   `json:"property,omitempty"`
+	Attribute  *string   `json:"attribute,omitempty"`
+	Types      []*string `json:"types,omitempty"`
+	Level      *string   `json:"level,omitempty"`
+	LinkArrows *string   `json:"linkArrows,omitempty"`
+	Attack     *string   `json:"attack,omitempty"`
+	Defence    *string   `json:"defence,omitempty"`
+	Link       *string   `json:"link,omitempty"`
+	Effects    []*string `json:"effects,omitempty"`
+	Ability    *string   `json:"ability,omitempty"`
+	Pendulum   *Pendulum `json:"pendulum,omitempty"`
+	Status     *string   `json:"status,omitempty"`
 }
 
 type ExchangeRate struct {
@@ -45,6 +58,11 @@ type Game struct {
 	Title string   `json:"title"`
 	Image *string  `json:"image,omitempty"`
 	Code  GameCode `json:"code"`
+}
+
+type Pendulum struct {
+	Effects []*string `json:"effects,omitempty"`
+	Scale   *string   `json:"scale,omitempty"`
 }
 
 type GameCode string

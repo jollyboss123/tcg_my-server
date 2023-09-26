@@ -50,7 +50,7 @@ type ComplexityRoot struct {
 		Currency  func(childComplexity int) int
 		Detail    func(childComplexity int, game model.GameCode) int
 		Image     func(childComplexity int) int
-		Name      func(childComplexity int) int
+		JpName    func(childComplexity int) int
 		Price     func(childComplexity int) int
 		Rarity    func(childComplexity int) int
 		Score     func(childComplexity int) int
@@ -68,7 +68,20 @@ type ComplexityRoot struct {
 	}
 
 	DetailInfo struct {
-		Ability func(childComplexity int) int
+		Ability    func(childComplexity int) int
+		Attack     func(childComplexity int) int
+		Attribute  func(childComplexity int) int
+		CardType   func(childComplexity int) int
+		Defence    func(childComplexity int) int
+		Effects    func(childComplexity int) int
+		EngName    func(childComplexity int) int
+		Level      func(childComplexity int) int
+		Link       func(childComplexity int) int
+		LinkArrows func(childComplexity int) int
+		Pendulum   func(childComplexity int) int
+		Property   func(childComplexity int) int
+		Status     func(childComplexity int) int
+		Types      func(childComplexity int) int
 	}
 
 	ExchangeRate struct {
@@ -81,6 +94,11 @@ type ComplexityRoot struct {
 		Code  func(childComplexity int) int
 		Image func(childComplexity int) int
 		Title func(childComplexity int) int
+	}
+
+	Pendulum struct {
+		Effects func(childComplexity int) int
+		Scale   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -158,12 +176,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Card.Image(childComplexity), true
 
-	case "Card.name":
-		if e.complexity.Card.Name == nil {
+	case "Card.jpName":
+		if e.complexity.Card.JpName == nil {
 			break
 		}
 
-		return e.complexity.Card.Name(childComplexity), true
+		return e.complexity.Card.JpName(childComplexity), true
 
 	case "Card.price":
 		if e.complexity.Card.Price == nil {
@@ -249,6 +267,97 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DetailInfo.Ability(childComplexity), true
 
+	case "DetailInfo.attack":
+		if e.complexity.DetailInfo.Attack == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Attack(childComplexity), true
+
+	case "DetailInfo.attribute":
+		if e.complexity.DetailInfo.Attribute == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Attribute(childComplexity), true
+
+	case "DetailInfo.cardType":
+		if e.complexity.DetailInfo.CardType == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.CardType(childComplexity), true
+
+	case "DetailInfo.defence":
+		if e.complexity.DetailInfo.Defence == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Defence(childComplexity), true
+
+	case "DetailInfo.effects":
+		if e.complexity.DetailInfo.Effects == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Effects(childComplexity), true
+
+	case "DetailInfo.engName":
+		if e.complexity.DetailInfo.EngName == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.EngName(childComplexity), true
+
+	case "DetailInfo.level":
+		if e.complexity.DetailInfo.Level == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Level(childComplexity), true
+
+	case "DetailInfo.link":
+		if e.complexity.DetailInfo.Link == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Link(childComplexity), true
+
+	case "DetailInfo.linkArrows":
+		if e.complexity.DetailInfo.LinkArrows == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.LinkArrows(childComplexity), true
+
+	case "DetailInfo.pendulum":
+		if e.complexity.DetailInfo.Pendulum == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Pendulum(childComplexity), true
+
+	case "DetailInfo.property":
+		if e.complexity.DetailInfo.Property == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Property(childComplexity), true
+
+	case "DetailInfo.status":
+		if e.complexity.DetailInfo.Status == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Status(childComplexity), true
+
+	case "DetailInfo.types":
+		if e.complexity.DetailInfo.Types == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Types(childComplexity), true
+
 	case "ExchangeRate.from":
 		if e.complexity.ExchangeRate.From == nil {
 			break
@@ -290,6 +399,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Game.Title(childComplexity), true
+
+	case "Pendulum.effects":
+		if e.complexity.Pendulum.Effects == nil {
+			break
+		}
+
+		return e.complexity.Pendulum.Effects(childComplexity), true
+
+	case "Pendulum.scale":
+		if e.complexity.Pendulum.Scale == nil {
+			break
+		}
+
+		return e.complexity.Pendulum.Scale(childComplexity), true
 
 	case "Query.cards":
 		if e.complexity.Query.Cards == nil {
@@ -432,7 +555,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../../../../schema/card/card.graphql", Input: `type Card {
     code: String!
-    name: String!
+    jpName: String!
     rarity: String!
     condition: String
     price: Int!
@@ -444,7 +567,25 @@ var sources = []*ast.Source{
 }
 
 type DetailInfo {
+    engName: String
+    cardType: String
+    property: String
+    attribute: String
+    types: [String]
+    level: String
+    linkArrows: String
+    attack: String
+    defence: String
+    link: String
+    effects: [String]
     ability: String
+    pendulum: Pendulum
+    status: String
+}
+
+type Pendulum {
+    effects: [String]
+    scale: String
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/currency/currency.graphql", Input: `type Currency {
@@ -691,8 +832,8 @@ func (ec *executionContext) fieldContext_Card_code(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Card_name(ctx context.Context, field graphql.CollectedField, obj *model.Card) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Card_name(ctx, field)
+func (ec *executionContext) _Card_jpName(ctx context.Context, field graphql.CollectedField, obj *model.Card) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Card_jpName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -705,7 +846,7 @@ func (ec *executionContext) _Card_name(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.JpName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -722,7 +863,7 @@ func (ec *executionContext) _Card_name(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Card_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Card_jpName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Card",
 		Field:      field,
@@ -1086,8 +1227,34 @@ func (ec *executionContext) fieldContext_Card_detail(ctx context.Context, field 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "engName":
+				return ec.fieldContext_DetailInfo_engName(ctx, field)
+			case "cardType":
+				return ec.fieldContext_DetailInfo_cardType(ctx, field)
+			case "property":
+				return ec.fieldContext_DetailInfo_property(ctx, field)
+			case "attribute":
+				return ec.fieldContext_DetailInfo_attribute(ctx, field)
+			case "types":
+				return ec.fieldContext_DetailInfo_types(ctx, field)
+			case "level":
+				return ec.fieldContext_DetailInfo_level(ctx, field)
+			case "linkArrows":
+				return ec.fieldContext_DetailInfo_linkArrows(ctx, field)
+			case "attack":
+				return ec.fieldContext_DetailInfo_attack(ctx, field)
+			case "defence":
+				return ec.fieldContext_DetailInfo_defence(ctx, field)
+			case "link":
+				return ec.fieldContext_DetailInfo_link(ctx, field)
+			case "effects":
+				return ec.fieldContext_DetailInfo_effects(ctx, field)
 			case "ability":
 				return ec.fieldContext_DetailInfo_ability(ctx, field)
+			case "pendulum":
+				return ec.fieldContext_DetailInfo_pendulum(ctx, field)
+			case "status":
+				return ec.fieldContext_DetailInfo_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DetailInfo", field.Name)
 		},
@@ -1414,6 +1581,457 @@ func (ec *executionContext) fieldContext_Currency_thousand(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _DetailInfo_engName(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_engName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EngName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_engName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_cardType(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_cardType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CardType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_cardType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_property(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_property(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Property, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_property(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_attribute(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_attribute(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attribute, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_attribute(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_types(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_types(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Types, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_types(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_level(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_level(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Level, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_level(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_linkArrows(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_linkArrows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LinkArrows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_linkArrows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_attack(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_attack(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attack, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_attack(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_defence(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_defence(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Defence, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_defence(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_link(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_link(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Link, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_effects(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_effects(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Effects, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_effects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DetailInfo_ability(ctx, field)
 	if err != nil {
@@ -1443,6 +2061,94 @@ func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graph
 }
 
 func (ec *executionContext) fieldContext_DetailInfo_ability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_pendulum(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_pendulum(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pendulum, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Pendulum)
+	fc.Result = res
+	return ec.marshalOPendulum2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐPendulum(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_pendulum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "effects":
+				return ec.fieldContext_Pendulum_effects(ctx, field)
+			case "scale":
+				return ec.fieldContext_Pendulum_scale(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Pendulum", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_status(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DetailInfo",
 		Field:      field,
@@ -1748,6 +2454,88 @@ func (ec *executionContext) fieldContext_Game_code(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Pendulum_effects(ctx context.Context, field graphql.CollectedField, obj *model.Pendulum) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Pendulum_effects(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Effects, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Pendulum_effects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Pendulum",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Pendulum_scale(ctx context.Context, field graphql.CollectedField, obj *model.Pendulum) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Pendulum_scale(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scale, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Pendulum_scale(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Pendulum",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_cards(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_cards(ctx, field)
 	if err != nil {
@@ -1789,8 +2577,8 @@ func (ec *executionContext) fieldContext_Query_cards(ctx context.Context, field 
 			switch field.Name {
 			case "code":
 				return ec.fieldContext_Card_code(ctx, field)
-			case "name":
-				return ec.fieldContext_Card_name(ctx, field)
+			case "jpName":
+				return ec.fieldContext_Card_jpName(ctx, field)
 			case "rarity":
 				return ec.fieldContext_Card_rarity(ctx, field)
 			case "condition":
@@ -3989,8 +4777,8 @@ func (ec *executionContext) _Card(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "name":
-			out.Values[i] = ec._Card_name(ctx, field, obj)
+		case "jpName":
+			out.Values[i] = ec._Card_jpName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -4156,8 +4944,34 @@ func (ec *executionContext) _DetailInfo(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DetailInfo")
+		case "engName":
+			out.Values[i] = ec._DetailInfo_engName(ctx, field, obj)
+		case "cardType":
+			out.Values[i] = ec._DetailInfo_cardType(ctx, field, obj)
+		case "property":
+			out.Values[i] = ec._DetailInfo_property(ctx, field, obj)
+		case "attribute":
+			out.Values[i] = ec._DetailInfo_attribute(ctx, field, obj)
+		case "types":
+			out.Values[i] = ec._DetailInfo_types(ctx, field, obj)
+		case "level":
+			out.Values[i] = ec._DetailInfo_level(ctx, field, obj)
+		case "linkArrows":
+			out.Values[i] = ec._DetailInfo_linkArrows(ctx, field, obj)
+		case "attack":
+			out.Values[i] = ec._DetailInfo_attack(ctx, field, obj)
+		case "defence":
+			out.Values[i] = ec._DetailInfo_defence(ctx, field, obj)
+		case "link":
+			out.Values[i] = ec._DetailInfo_link(ctx, field, obj)
+		case "effects":
+			out.Values[i] = ec._DetailInfo_effects(ctx, field, obj)
 		case "ability":
 			out.Values[i] = ec._DetailInfo_ability(ctx, field, obj)
+		case "pendulum":
+			out.Values[i] = ec._DetailInfo_pendulum(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._DetailInfo_status(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4253,6 +5067,44 @@ func (ec *executionContext) _Game(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pendulumImplementors = []string{"Pendulum"}
+
+func (ec *executionContext) _Pendulum(ctx context.Context, sel ast.SelectionSet, obj *model.Pendulum) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pendulumImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Pendulum")
+		case "effects":
+			out.Values[i] = ec._Pendulum_effects(ctx, field, obj)
+		case "scale":
+			out.Values[i] = ec._Pendulum_scale(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5312,6 +6164,45 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOPendulum2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐPendulum(ctx context.Context, sel ast.SelectionSet, v *model.Pendulum) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Pendulum(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

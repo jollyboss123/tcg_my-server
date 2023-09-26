@@ -8,7 +8,7 @@ func ToCard(card *source.Card) *Card {
 	}
 	return &Card{
 		Code:      card.Code,
-		Name:      card.Name,
+		JpName:    card.JpName,
 		Rarity:    card.Rarity,
 		Condition: &card.Condition,
 		Price:     int(card.Price),
@@ -36,7 +36,49 @@ func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
 	if d == nil {
 		return nil
 	}
+	var types = make([]*string, len(d.Types))
+	if d.Types != nil && len(d.Types) > 0 {
+		for i := range d.Types {
+			types[i] = &d.Types[i]
+		}
+	}
+	var effects = make([]*string, len(d.Effects))
+	if d.Effects != nil && len(d.Effects) > 0 {
+		for i := range d.Effects {
+			effects[i] = &d.Effects[i]
+		}
+	}
 	return &DetailInfo{
-		Ability: &d.Ability,
+		EngName:    &d.EngName,
+		CardType:   &d.CardType,
+		Property:   &d.Property,
+		Attribute:  &d.Attribute,
+		Types:      types,
+		LinkArrows: &d.LinkArrows,
+		Ability:    &d.Ability,
+		Level:      &d.Level,
+		Attack:     &d.Atk,
+		Defence:    &d.Def,
+		Link:       &d.Link,
+		Effects:    effects,
+		Pendulum:   ToPendulum(&d.Pendulum),
+		Status:     &d.Status,
+	}
+}
+
+func ToPendulum(p *source.Pendulum) *Pendulum {
+	if p == nil {
+		return nil
+	}
+	var effects = make([]*string, len(p.Effects))
+	if p.Effects != nil && len(p.Effects) > 0 {
+		for i := range p.Effects {
+			effects[i] = &p.Effects[i]
+		}
+	}
+
+	return &Pendulum{
+		Effects: effects,
+		Scale:   &p.Scale,
 	}
 }

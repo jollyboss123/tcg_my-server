@@ -15,7 +15,7 @@ type DetailService interface {
 
 type Card struct {
 	Code      string
-	Name      string
+	JpName    string
 	Rarity    string
 	Condition string
 	Price     int64
@@ -26,5 +26,23 @@ type Card struct {
 }
 
 type DetailInfo struct {
-	Ability string
+	EngName    string
+	CardType   string
+	Property   string
+	Attribute  string
+	Types      []string
+	Level      string
+	LinkArrows string
+	Atk        string
+	Def        string
+	Link       string
+	Effects    []string
+	Ability    string
+	Pendulum   Pendulum
+	Status     string
+}
+
+type Pendulum struct {
+	Effects []string
+	Scale   string
 }

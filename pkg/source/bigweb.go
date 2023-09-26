@@ -38,7 +38,7 @@ func (b *bigWeb) List(ctx context.Context, query, game string) ([]*Card, error) 
 
 	params := url.Values{}
 	params.Add("game_id", "9")
-	params.Add("Name", query)
+	params.Add("EngName", query)
 	baseURL.RawQuery = params.Encode()
 	c := make([]*Card, 0)
 
@@ -107,7 +107,7 @@ func (b *bigWeb) List(ctx context.Context, query, game string) ([]*Card, error) 
 
 		c = append(c, &card)
 
-		b.logger.Debug("card info", slog.String("name", card.Name),
+		b.logger.Debug("card info", slog.String("name", card.JpName),
 			slog.String("code", card.Code),
 			slog.String("rarity", card.Rarity),
 			slog.String("condition", card.Condition),

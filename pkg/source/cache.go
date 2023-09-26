@@ -18,7 +18,6 @@ type cachedSource struct {
 	cache    *redis.Client
 	cfg      *config.Config
 	logger   *slog.Logger
-	//ds       DetailService
 }
 
 func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slog.Logger, gs game.Service, service ...ScrapeService) ScrapeService {
@@ -29,7 +28,6 @@ func NewCachedScrapeService(cache *redis.Client, cfg *config.Config, logger *slo
 		cfg:      cfg,
 		logger:   child,
 		gs:       gs,
-		//ds:       ds,
 	}
 }
 
@@ -56,16 +54,6 @@ func (c *cachedSource) List(ctx context.Context, query, game string) ([]*Card, e
 
 	return cards, nil
 }
-
-//func (c *cachedSource) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
-//	//log.Printf("code: %s\n", code)
-//	//log.Printf("game: %s\n", game)
-//	//
-//	//return &DetailInfo{
-//	//	Ability: "hi",
-//	//}, nil
-//	return c.ds.Fetch(ctx, code, game)
-//}
 
 func (c *cachedSource) isQueryCached(ctx context.Context, query, game string) bool {
 	exists, err := c.cache.SIsMember(ctx, fmt.Sprintf("query:%s", game), query).Result()
@@ -171,10 +159,10 @@ func (c *cachedSource) fetchAndCache(ctx context.Context, query, game string) ([
 	// The rarer the card, the higher the score.
 	for idx, card := range cards {
 		card.Score = len(cards) - idx
-		_ = c.cacheQuery(ctx, card.Name, game)
+		_ = c.cacheQuery(ctx, card.JpName, game)
 		_ = c.cacheQuery(ctx, card.Code, game)
 
-		uID := fmt.Sprintf("%s||%s||%s", card.Rarity, card.Name, card.Code)
+		uID := fmt.Sprintf("%s||%s||%s", card.Rarity, card.JpName, card.Code)
 		setKey := fmt.Sprintf("game:identifiers:%s", game)
 		hashKey := fmt.Sprintf("game:data:%s", game)
 
