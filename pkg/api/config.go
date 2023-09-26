@@ -16,11 +16,12 @@ func newConfig(
 	scrape source.ScrapeService,
 	rate rate.Service,
 	game game.Service,
+	detail source.DetailService,
 ) resolver.Config {
 	return resolver.Config{
 		Resolvers: &resolverRoot{
 			queryResolver: query.NewQueryResolver(scrape, currency, rate, game),
-			cardResolver:  card.NewCardResolver(scrape),
+			cardResolver:  card.NewCardResolver(detail),
 		},
 	}
 }

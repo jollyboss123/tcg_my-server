@@ -7,6 +7,7 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
+	"github.com/jollyboss123/tcg_my-server/pkg/source/detail"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -22,6 +23,7 @@ func (s *Server) InitRouter() {
 		s.scrapeService(),
 		s.rateService(),
 		s.gameService(),
+		s.detailService(),
 	)
 
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemeConfig))
@@ -76,4 +78,8 @@ func (s *Server) rateService() rate.Service {
 
 func (s *Server) gameService() game.Service {
 	return game.NewService(s.log)
+}
+
+func (s *Server) detailService() source.DetailService {
+	return detail.NewYGO(s.log)
 }

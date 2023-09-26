@@ -6,7 +6,6 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
-	"log"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -115,15 +114,6 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	case <-done:
 		return cs, nil
 	}
-}
-
-func (y *yyt) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
-	log.Printf("code: %s\n", code)
-	log.Printf("game: %s\n", game)
-
-	return &DetailInfo{
-		Ability: "hi",
-	}, nil
 }
 
 func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source, imageURL string, logger *slog.Logger) func(*colly.HTMLElement) {

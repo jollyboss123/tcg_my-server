@@ -7,6 +7,9 @@ import (
 
 type ScrapeService interface {
 	List(ctx context.Context, query, game string) ([]*Card, error)
+}
+
+type DetailService interface {
 	Fetch(ctx context.Context, code, game string) (*DetailInfo, error)
 }
 

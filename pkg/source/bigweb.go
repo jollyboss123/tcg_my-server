@@ -121,7 +121,3 @@ func (b *bigWeb) List(ctx context.Context, query, game string) ([]*Card, error) 
 		return c, nil
 	}
 }
-
-func (b *bigWeb) Fetch(ctx context.Context, code, game string) (*DetailInfo, error) {
-	return &DetailInfo{}, nil
-}
