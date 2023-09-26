@@ -4,17 +4,24 @@ import (
 	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/middleware"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
 	"github.com/jollyboss123/tcg_my-server/pkg/source/detail"
 	"net/http"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/go-chi/chi/v5"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/resolver"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
+)
+
+const (
+	dataLoaderWait     = 250 * time.Microsecond
+	dataLoaderMaxBatch = 1000
 )
 
 func (s *Server) InitRouter() {
@@ -46,6 +53,12 @@ func (s *Server) InitRouter() {
 	})
 
 	s.router.Group(func(r chi.Router) {
+		r.Use(middleware.NewDataLoader(
+			dataLoaderWait,
+			dataLoaderMaxBatch,
+			s.detailService(),
+		))
+
 		r.Handle("/query", gqlHandler)
 		r.Handle("/api/query", gqlHandler)
 	})

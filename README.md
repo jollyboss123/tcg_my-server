@@ -1,7 +1,7 @@
 # TCG.MY
 [![Go](https://github.com/jollyboss123/tcg_my-server/actions/workflows/go.yml/badge.svg)](https://github.com/jollyboss123/tcg_my-server/actions/workflows/go.yml)
 
-Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh OCG cards' price by
+Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for retrieving Yugioh, Vanguard, One Piece, and Weiss Schwarz OCG cards' info by
 scraping data
 from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
 
@@ -12,6 +12,7 @@ from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
    with [apq](https://www.apollographql.com/docs/resources/graphql-glossary/#automatic-persisted-queries-apq) and lru
    cache
 3. graphql response caching with redis
+4. dataloader for similar card details requests
 4. structured logging with slog
 
 ## Endpoints

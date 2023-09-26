@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.37
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/gocolly/colly/v2 v2.1.0
+	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/redis/go-redis/v9 v9.1.0
