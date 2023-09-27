@@ -132,9 +132,13 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, im
 				return
 			}
 			imgURL := el.ChildAttr("a", "href")
+			imgSrc := el.ChildAttr("div .product-img img", "src")
+			y.logger.Info("here: " + imgSrc)
 			id := strings.Split(imgURL, "/card/")
 			if len(id) > 1 {
-				card.Image = imageURL + id[1] + ".jpg"
+				if !strings.Contains(imgSrc, "noimage") {
+					card.Image = imageURL + id[1] + ".jpg"
+				}
 			} else {
 				y.logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
 			}

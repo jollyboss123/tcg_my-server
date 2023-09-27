@@ -95,7 +95,7 @@ func (s *Server) gameService() game.Service {
 
 func (s *Server) detailService() source.DetailService {
 	services := map[string]source.DetailService{
-		"ygo": detail.NewYGO(s.log),
+		game.YGO: detail.NewYGO(s.log),
 	}
 
 	return detail.NewCachedDetailService(
@@ -103,5 +103,6 @@ func (s *Server) detailService() source.DetailService {
 		s.cfg,
 		s.log,
 		services,
+		s.gameService(),
 	)
 }

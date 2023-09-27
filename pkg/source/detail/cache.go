@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jollyboss123/tcg_my-server/config"
+	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
@@ -13,6 +14,7 @@ import (
 
 type cachedDetail struct {
 	services map[string]source.DetailService
+	gs       game.Service
 	cache    *redis.Client
 	cfg      *config.Config
 	logger   *slog.Logger
@@ -23,6 +25,7 @@ func NewCachedDetailService(
 	cfg *config.Config,
 	logger *slog.Logger,
 	services map[string]source.DetailService,
+	gs game.Service,
 ) source.DetailService {
 	child := logger.With(slog.String("api", "cached-detail"))
 	return &cachedDetail{
@@ -30,10 +33,17 @@ func NewCachedDetailService(
 		cache:    cache,
 		cfg:      cfg,
 		logger:   child,
+		gs:       gs,
 	}
 }
 
 func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
+	code = strings.ToUpper(code)
+	_, err := c.gs.Fetch(ctx, game)
+	if err != nil {
+		c.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
 	cacheKey := fmt.Sprintf("detail||%s||%s", game, code)
 
 	val, err := c.cache.Get(ctx, cacheKey).Result()
@@ -49,7 +59,7 @@ func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.De
 	}
 
 	c.logger.Info("cache miss", slog.String("code", code), slog.String("game", game))
-	s, exists := c.services[strings.ToLower(game)]
+	s, exists := c.services[game]
 	if !exists {
 		c.logger.Error("check service exist", slog.String("error", fmt.Errorf("card detail service for %s not found", game).Error()))
 		return nil, fmt.Errorf("card detail service for %s not found", game)
@@ -63,7 +73,10 @@ func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.De
 
 	cacheEntry, err := json.Marshal(info)
 	if err == nil && info != nil {
-		c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime)
+		err = c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime).Err()
+		if err != nil {
+			c.logger.Warn("set cache", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		}
 	} else {
 		c.logger.Warn("marshal cache data", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 	}
