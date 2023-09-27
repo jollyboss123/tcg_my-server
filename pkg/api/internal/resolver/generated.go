@@ -68,20 +68,20 @@ type ComplexityRoot struct {
 	}
 
 	DetailInfo struct {
-		Ability    func(childComplexity int) int
-		Attack     func(childComplexity int) int
-		Attribute  func(childComplexity int) int
-		CardType   func(childComplexity int) int
-		Defence    func(childComplexity int) int
-		Effects    func(childComplexity int) int
-		EngName    func(childComplexity int) int
-		Level      func(childComplexity int) int
-		Link       func(childComplexity int) int
-		LinkArrows func(childComplexity int) int
-		Pendulum   func(childComplexity int) int
-		Property   func(childComplexity int) int
-		Status     func(childComplexity int) int
-		Types      func(childComplexity int) int
+		Attack      func(childComplexity int) int
+		Attribute   func(childComplexity int) int
+		CardType    func(childComplexity int) int
+		Defence     func(childComplexity int) int
+		Effect      func(childComplexity int) int
+		EffectTypes func(childComplexity int) int
+		EngName     func(childComplexity int) int
+		Level       func(childComplexity int) int
+		Link        func(childComplexity int) int
+		LinkArrows  func(childComplexity int) int
+		Pendulum    func(childComplexity int) int
+		Property    func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Types       func(childComplexity int) int
 	}
 
 	ExchangeRate struct {
@@ -97,8 +97,9 @@ type ComplexityRoot struct {
 	}
 
 	Pendulum struct {
-		Effects func(childComplexity int) int
-		Scale   func(childComplexity int) int
+		Effect      func(childComplexity int) int
+		EffectTypes func(childComplexity int) int
+		Scale       func(childComplexity int) int
 	}
 
 	Query struct {
@@ -260,13 +261,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Currency.Thousand(childComplexity), true
 
-	case "DetailInfo.ability":
-		if e.complexity.DetailInfo.Ability == nil {
-			break
-		}
-
-		return e.complexity.DetailInfo.Ability(childComplexity), true
-
 	case "DetailInfo.attack":
 		if e.complexity.DetailInfo.Attack == nil {
 			break
@@ -295,12 +289,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DetailInfo.Defence(childComplexity), true
 
-	case "DetailInfo.effects":
-		if e.complexity.DetailInfo.Effects == nil {
+	case "DetailInfo.effect":
+		if e.complexity.DetailInfo.Effect == nil {
 			break
 		}
 
-		return e.complexity.DetailInfo.Effects(childComplexity), true
+		return e.complexity.DetailInfo.Effect(childComplexity), true
+
+	case "DetailInfo.effectTypes":
+		if e.complexity.DetailInfo.EffectTypes == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.EffectTypes(childComplexity), true
 
 	case "DetailInfo.engName":
 		if e.complexity.DetailInfo.EngName == nil {
@@ -400,12 +401,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Game.Title(childComplexity), true
 
-	case "Pendulum.effects":
-		if e.complexity.Pendulum.Effects == nil {
+	case "Pendulum.effect":
+		if e.complexity.Pendulum.Effect == nil {
 			break
 		}
 
-		return e.complexity.Pendulum.Effects(childComplexity), true
+		return e.complexity.Pendulum.Effect(childComplexity), true
+
+	case "Pendulum.effectTypes":
+		if e.complexity.Pendulum.EffectTypes == nil {
+			break
+		}
+
+		return e.complexity.Pendulum.EffectTypes(childComplexity), true
 
 	case "Pendulum.scale":
 		if e.complexity.Pendulum.Scale == nil {
@@ -572,20 +580,28 @@ type DetailInfo {
     property: String
     attribute: String
     types: [String]
-    level: String
+    level: String #level or rank
     linkArrows: String
     attack: String
     defence: String
     link: String
-    effects: [String]
-    ability: String
+    effectTypes: [String] #effect types
+    effect: String #card effect
     pendulum: Pendulum
-    status: String
+    status: BanStatus
 }
 
 type Pendulum {
-    effects: [String]
+    effectTypes: [String] #effect types
     scale: String
+    effect: String #card effect
+}
+
+enum BanStatus {
+    UNLIMITED
+    SEMI_LIMITED
+    LIMITED
+    FORBIDDEN
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/currency/currency.graphql", Input: `type Currency {
@@ -1247,10 +1263,10 @@ func (ec *executionContext) fieldContext_Card_detail(ctx context.Context, field 
 				return ec.fieldContext_DetailInfo_defence(ctx, field)
 			case "link":
 				return ec.fieldContext_DetailInfo_link(ctx, field)
-			case "effects":
-				return ec.fieldContext_DetailInfo_effects(ctx, field)
-			case "ability":
-				return ec.fieldContext_DetailInfo_ability(ctx, field)
+			case "effectTypes":
+				return ec.fieldContext_DetailInfo_effectTypes(ctx, field)
+			case "effect":
+				return ec.fieldContext_DetailInfo_effect(ctx, field)
 			case "pendulum":
 				return ec.fieldContext_DetailInfo_pendulum(ctx, field)
 			case "status":
@@ -1991,8 +2007,8 @@ func (ec *executionContext) fieldContext_DetailInfo_link(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _DetailInfo_effects(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DetailInfo_effects(ctx, field)
+func (ec *executionContext) _DetailInfo_effectTypes(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_effectTypes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2005,7 +2021,7 @@ func (ec *executionContext) _DetailInfo_effects(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Effects, nil
+		return obj.EffectTypes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2019,7 +2035,7 @@ func (ec *executionContext) _DetailInfo_effects(ctx context.Context, field graph
 	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_DetailInfo_effects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DetailInfo_effectTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DetailInfo",
 		Field:      field,
@@ -2032,8 +2048,8 @@ func (ec *executionContext) fieldContext_DetailInfo_effects(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DetailInfo_ability(ctx, field)
+func (ec *executionContext) _DetailInfo_effect(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_effect(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2046,7 +2062,7 @@ func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Ability, nil
+		return obj.Effect, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2060,7 +2076,7 @@ func (ec *executionContext) _DetailInfo_ability(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_DetailInfo_ability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DetailInfo_effect(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DetailInfo",
 		Field:      field,
@@ -2109,10 +2125,12 @@ func (ec *executionContext) fieldContext_DetailInfo_pendulum(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "effects":
-				return ec.fieldContext_Pendulum_effects(ctx, field)
+			case "effectTypes":
+				return ec.fieldContext_Pendulum_effectTypes(ctx, field)
 			case "scale":
 				return ec.fieldContext_Pendulum_scale(ctx, field)
+			case "effect":
+				return ec.fieldContext_Pendulum_effect(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Pendulum", field.Name)
 		},
@@ -2143,9 +2161,9 @@ func (ec *executionContext) _DetailInfo_status(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.BanStatus)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOBanStatus2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐBanStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DetailInfo_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2155,7 +2173,7 @@ func (ec *executionContext) fieldContext_DetailInfo_status(ctx context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type BanStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2454,8 +2472,8 @@ func (ec *executionContext) fieldContext_Game_code(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Pendulum_effects(ctx context.Context, field graphql.CollectedField, obj *model.Pendulum) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Pendulum_effects(ctx, field)
+func (ec *executionContext) _Pendulum_effectTypes(ctx context.Context, field graphql.CollectedField, obj *model.Pendulum) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Pendulum_effectTypes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2468,7 +2486,7 @@ func (ec *executionContext) _Pendulum_effects(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Effects, nil
+		return obj.EffectTypes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2482,7 +2500,7 @@ func (ec *executionContext) _Pendulum_effects(ctx context.Context, field graphql
 	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Pendulum_effects(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Pendulum_effectTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Pendulum",
 		Field:      field,
@@ -2524,6 +2542,47 @@ func (ec *executionContext) _Pendulum_scale(ctx context.Context, field graphql.C
 }
 
 func (ec *executionContext) fieldContext_Pendulum_scale(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Pendulum",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Pendulum_effect(ctx context.Context, field graphql.CollectedField, obj *model.Pendulum) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Pendulum_effect(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Effect, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Pendulum_effect(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Pendulum",
 		Field:      field,
@@ -4964,10 +5023,10 @@ func (ec *executionContext) _DetailInfo(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._DetailInfo_defence(ctx, field, obj)
 		case "link":
 			out.Values[i] = ec._DetailInfo_link(ctx, field, obj)
-		case "effects":
-			out.Values[i] = ec._DetailInfo_effects(ctx, field, obj)
-		case "ability":
-			out.Values[i] = ec._DetailInfo_ability(ctx, field, obj)
+		case "effectTypes":
+			out.Values[i] = ec._DetailInfo_effectTypes(ctx, field, obj)
+		case "effect":
+			out.Values[i] = ec._DetailInfo_effect(ctx, field, obj)
 		case "pendulum":
 			out.Values[i] = ec._DetailInfo_pendulum(ctx, field, obj)
 		case "status":
@@ -5101,10 +5160,12 @@ func (ec *executionContext) _Pendulum(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Pendulum")
-		case "effects":
-			out.Values[i] = ec._Pendulum_effects(ctx, field, obj)
+		case "effectTypes":
+			out.Values[i] = ec._Pendulum_effectTypes(ctx, field, obj)
 		case "scale":
 			out.Values[i] = ec._Pendulum_scale(ctx, field, obj)
+		case "effect":
+			out.Values[i] = ec._Pendulum_effect(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6115,6 +6176,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOBanStatus2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐBanStatus(ctx context.Context, v interface{}) (*model.BanStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.BanStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBanStatus2ᚖgithubᚗcomᚋjollyboss123ᚋtcg_myᚑserverᚋpkgᚋapiᚋinternalᚋmodelᚐBanStatus(ctx context.Context, sel ast.SelectionSet, v *model.BanStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

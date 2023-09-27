@@ -26,23 +26,33 @@ type Card struct {
 }
 
 type DetailInfo struct {
-	EngName    string
-	CardType   string
-	Property   string
-	Attribute  string
-	Types      []string
-	Level      string
-	LinkArrows string
-	Atk        string
-	Def        string
-	Link       string
-	Effects    []string
-	Ability    string
-	Pendulum   Pendulum
-	Status     string
+	EngName     string
+	CardType    string
+	Property    string
+	Attribute   string
+	Types       []string
+	Level       string
+	LinkArrows  string
+	Atk         string
+	Def         string
+	Link        string
+	EffectTypes []string
+	Effect      string
+	Pendulum    Pendulum
+	Status      BanStatus
 }
 
 type Pendulum struct {
-	Effects []string
-	Scale   string
+	EffectTypes []string
+	Scale       string
+	Effect      string
 }
+
+type BanStatus string
+
+const (
+	BanStatusUnlimited   BanStatus = "UNLIMITED"
+	BanStatusSemiLimited BanStatus = "SEMI_LIMITED"
+	BanStatusLimited     BanStatus = "LIMITED"
+	BanStatusForbidden   BanStatus = "FORBIDDEN"
+)

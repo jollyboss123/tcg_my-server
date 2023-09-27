@@ -20,8 +20,8 @@ func ToGames(games []*game.Game) []*Game {
 	}
 
 	var res []*Game
-	for _, game := range games {
-		g := ToGame(game)
+	for _, gg := range games {
+		g := ToGame(gg)
 		res = append(res, g)
 	}
 	return res

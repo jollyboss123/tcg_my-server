@@ -32,20 +32,20 @@ type Currency struct {
 }
 
 type DetailInfo struct {
-	EngName    *string   `json:"engName,omitempty"`
-	CardType   *string   `json:"cardType,omitempty"`
-	Property   *string   `json:"property,omitempty"`
-	Attribute  *string   `json:"attribute,omitempty"`
-	Types      []*string `json:"types,omitempty"`
-	Level      *string   `json:"level,omitempty"`
-	LinkArrows *string   `json:"linkArrows,omitempty"`
-	Attack     *string   `json:"attack,omitempty"`
-	Defence    *string   `json:"defence,omitempty"`
-	Link       *string   `json:"link,omitempty"`
-	Effects    []*string `json:"effects,omitempty"`
-	Ability    *string   `json:"ability,omitempty"`
-	Pendulum   *Pendulum `json:"pendulum,omitempty"`
-	Status     *string   `json:"status,omitempty"`
+	EngName     *string    `json:"engName,omitempty"`
+	CardType    *string    `json:"cardType,omitempty"`
+	Property    *string    `json:"property,omitempty"`
+	Attribute   *string    `json:"attribute,omitempty"`
+	Types       []*string  `json:"types,omitempty"`
+	Level       *string    `json:"level,omitempty"`
+	LinkArrows  *string    `json:"linkArrows,omitempty"`
+	Attack      *string    `json:"attack,omitempty"`
+	Defence     *string    `json:"defence,omitempty"`
+	Link        *string    `json:"link,omitempty"`
+	EffectTypes []*string  `json:"effectTypes,omitempty"`
+	Effect      *string    `json:"effect,omitempty"`
+	Pendulum    *Pendulum  `json:"pendulum,omitempty"`
+	Status      *BanStatus `json:"status,omitempty"`
 }
 
 type ExchangeRate struct {
@@ -61,8 +61,54 @@ type Game struct {
 }
 
 type Pendulum struct {
-	Effects []*string `json:"effects,omitempty"`
-	Scale   *string   `json:"scale,omitempty"`
+	EffectTypes []*string `json:"effectTypes,omitempty"`
+	Scale       *string   `json:"scale,omitempty"`
+	Effect      *string   `json:"effect,omitempty"`
+}
+
+type BanStatus string
+
+const (
+	BanStatusUnlimited   BanStatus = "UNLIMITED"
+	BanStatusSemiLimited BanStatus = "SEMI_LIMITED"
+	BanStatusLimited     BanStatus = "LIMITED"
+	BanStatusForbidden   BanStatus = "FORBIDDEN"
+)
+
+var AllBanStatus = []BanStatus{
+	BanStatusUnlimited,
+	BanStatusSemiLimited,
+	BanStatusLimited,
+	BanStatusForbidden,
+}
+
+func (e BanStatus) IsValid() bool {
+	switch e {
+	case BanStatusUnlimited, BanStatusSemiLimited, BanStatusLimited, BanStatusForbidden:
+		return true
+	}
+	return false
+}
+
+func (e BanStatus) String() string {
+	return string(e)
+}
+
+func (e *BanStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BanStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BanStatus", str)
+	}
+	return nil
+}
+
+func (e BanStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type GameCode string

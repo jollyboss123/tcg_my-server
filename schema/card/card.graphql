@@ -22,13 +22,21 @@ type DetailInfo {
     attack: String
     defence: String
     link: String
-    effects: [String] #effect types
-    ability: String #card effect
+    effectTypes: [String] #effect types
+    effect: String #card effect
     pendulum: Pendulum
-    status: String #ban status
+    status: BanStatus
 }
 
 type Pendulum {
-    effects: [String] #effect types
+    effectTypes: [String] #effect types
     scale: String
+    effect: String #card effect
+}
+
+enum BanStatus {
+    UNLIMITED
+    SEMI_LIMITED
+    LIMITED
+    FORBIDDEN
 }

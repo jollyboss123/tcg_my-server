@@ -55,10 +55,14 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
+	c.OnHTML("div .heading", func(e *colly.HTMLElement) {
+		detail.EngName = e.Text
+	})
+
 	c.OnHTML("div .card-table-columns", func(e *colly.HTMLElement) {
+		isPendulum := false
 		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
 			header := el.ChildText("th")
-			y.logger.Info("header: " + header)
 			switch header {
 			case "Card type":
 				detail.CardType = el.ChildText("td > a")
@@ -75,8 +79,8 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 					detail.LinkArrows = ele.ChildText("a")
 				})
 			case "Pendulum Scale":
+				isPendulum = true
 				detail.Pendulum.Scale = el.ChildText("td > a:nth-child(2)")
-				y.logger.Info("pendulum: " + detail.Pendulum.Scale)
 			case "ATK / LINK":
 				p := el.ChildTexts("td > a")
 				detail.Atk = p[0]
@@ -90,19 +94,49 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 			case "Rank":
 				detail.Level = el.ChildText("td > a:nth-child(1)")
 			case "Effect types":
-				el.ForEach("li", func(_ int, ele *colly.HTMLElement) {
-					detail.Effects = append(detail.Effects, ele.ChildText("a"))
-				})
+				if !isPendulum {
+					el.ForEach("li", func(_ int, ele *colly.HTMLElement) {
+						detail.EffectTypes = append(detail.EffectTypes, ele.ChildText("a"))
+					})
+				} else {
+					el.ForEach("ul", func(_ int, ele *colly.HTMLElement) {
+						dtText := ele.DOM.Prev().Text()
+
+						isPendulumEffect := strings.Contains(dtText, "Pendulum")
+
+						ele.ForEach("li > a", func(_ int, elem *colly.HTMLElement) {
+							if isPendulumEffect {
+								detail.Pendulum.EffectTypes = append(detail.Pendulum.EffectTypes, elem.Text)
+							} else {
+								detail.EffectTypes = append(detail.EffectTypes, elem.Text)
+							}
+						})
+					})
+				}
 			case "Status":
 				el.ForEach("i", func(_ int, ele *colly.HTMLElement) {
 					if strings.TrimSpace(ele.Text) == "OCG" {
-						detail.Status = ele.DOM.Prev().Text()
+						detail.Status = source.BanStatus(ele.DOM.Prev().Text())
 					}
 				})
 			}
 		})
 
-		detail.Ability = e.ChildText("div .lore p")
+		if !isPendulum {
+			detail.Effect = e.ChildText("div .lore p")
+		} else {
+			e.ForEach("div .lore dd", func(_ int, el *colly.HTMLElement) {
+				dtText := el.DOM.Prev().Text()
+
+				isPendulumEffect := strings.Contains(dtText, "Pendulum")
+
+				if isPendulumEffect {
+					detail.Pendulum.Effect = el.Text
+				} else {
+					detail.Effect = el.Text
+				}
+			})
+		}
 	})
 
 	var mu sync.Mutex

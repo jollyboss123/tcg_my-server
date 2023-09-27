@@ -71,7 +71,7 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, y.source, g.ImageEndpoint, y.logger))
+	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, g.ImageEndpoint))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -116,10 +116,10 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	}
 }
 
-func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, source, imageURL string, logger *slog.Logger) func(*colly.HTMLElement) {
+func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, imageURL string) func(*colly.HTMLElement) {
 	c, err := y.cs.Fetch(ctx, "JPY")
 	if err != nil {
-		logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
+		y.logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
 	}
 	return func(e *colly.HTMLElement) {
 		rarity := e.ChildText("h3 > span")
@@ -136,16 +136,16 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, so
 			if len(id) > 1 {
 				card.Image = imageURL + id[1] + ".jpg"
 			} else {
-				logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
+				y.logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
 			}
 			card.Price = price
 			card.Rarity = rarity
 			card.JpName = el.ChildText("a > h4")
-			card.Source = source
+			card.Source = y.source
 			card.Currency = c
 			*cs = append(*cs, &card)
 
-			logger.Debug("card info", slog.String("name", card.JpName),
+			y.logger.Debug("card info", slog.String("name", card.JpName),
 				slog.String("code", card.Code),
 				slog.String("rarity", card.Rarity),
 				slog.String("condition", card.Condition),
