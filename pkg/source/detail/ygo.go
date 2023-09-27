@@ -60,40 +60,43 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	})
 
 	c.OnHTML("div .card-table-columns", func(e *colly.HTMLElement) {
-		isPendulum := false
-		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
-			header := el.ChildText("th")
-			switch header {
-			case "Card type":
-				detail.CardType = el.ChildText("td > a")
-			case "Attribute":
-				detail.Attribute = el.ChildText("td > a")
-			case "Property":
+		var isPendulum bool
+
+		fieldResolvers := map[string]func(el *colly.HTMLElement){
+			"Card type": func(el *colly.HTMLElement) { detail.CardType = el.ChildText("td > a") },
+			"Attribute": func(el *colly.HTMLElement) { detail.Attribute = el.ChildText("td > a") },
+			"Property": func(el *colly.HTMLElement) {
 				detail.Property = el.ChildText("td > a")
-			case "Types":
+			},
+			"Types": func(el *colly.HTMLElement) {
 				el.ForEach("td > a", func(_ int, ele *colly.HTMLElement) {
 					detail.Types = append(detail.Types, ele.Text)
 				})
-			case "Link Arrows":
+			},
+			"Link Arrows": func(el *colly.HTMLElement) {
 				el.ForEach("td > div > div:nth-child(2)", func(_ int, ele *colly.HTMLElement) {
 					detail.LinkArrows = ele.ChildText("a")
 				})
-			case "Pendulum Scale":
+			},
+			"Pendulum Scale": func(el *colly.HTMLElement) {
 				isPendulum = true
 				detail.Pendulum.Scale = el.ChildText("td > a:nth-child(2)")
-			case "ATK / LINK":
+			},
+			"ATK / LINK": func(el *colly.HTMLElement) {
 				p := el.ChildTexts("td > a")
-				detail.Atk = p[0]
-				detail.Link = p[1]
-			case "ATK / DEF":
+				detail.Atk, detail.Link = p[0], p[1]
+			},
+			"ATK / DEF": func(el *colly.HTMLElement) {
 				p := el.ChildTexts("td > a")
-				detail.Atk = p[0]
-				detail.Def = p[1]
-			case "Level":
-				fallthrough
-			case "Rank":
+				detail.Atk, detail.Def = p[0], p[1]
+			},
+			"Level": func(el *colly.HTMLElement) {
 				detail.Level = el.ChildText("td > a:nth-child(1)")
-			case "Effect types":
+			},
+			"Rank": func(el *colly.HTMLElement) {
+				detail.Level = el.ChildText("td > a:nth-child(1)")
+			},
+			"Effect types": func(el *colly.HTMLElement) {
 				if !isPendulum {
 					el.ForEach("li", func(_ int, ele *colly.HTMLElement) {
 						detail.EffectTypes = append(detail.EffectTypes, ele.ChildText("a"))
@@ -113,24 +116,28 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 						})
 					})
 				}
-			case "Status":
+			},
+			"Status": func(el *colly.HTMLElement) {
 				el.ForEach("i", func(_ int, ele *colly.HTMLElement) {
 					if strings.TrimSpace(ele.Text) == "OCG" {
 						detail.Status = source.BanStatus(ele.DOM.Prev().Text())
 					}
 				})
+			},
+		}
+
+		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
+			header := el.ChildText("th")
+			if resolver, exists := fieldResolvers[header]; exists {
+				resolver(el)
 			}
 		})
 
-		if !isPendulum {
-			detail.Effect = e.ChildText("div .lore p")
-		} else {
+		detail.Effect = e.ChildText("div .lore p")
+
+		if isPendulum {
 			e.ForEach("div .lore dd", func(_ int, el *colly.HTMLElement) {
-				dtText := el.DOM.Prev().Text()
-
-				isPendulumEffect := strings.Contains(dtText, "Pendulum")
-
-				if isPendulumEffect {
+				if strings.Contains(el.DOM.Prev().Text(), "Pendulum") {
 					detail.Pendulum.Effect = el.Text
 				} else {
 					detail.Effect = el.Text
