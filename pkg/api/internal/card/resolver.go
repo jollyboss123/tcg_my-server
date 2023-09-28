@@ -19,8 +19,8 @@ func NewCardResolver(d source.DetailService) resolver.CardResolver {
 	}
 }
 
-func (c *cardResolver) Detail(ctx context.Context, obj *model.Card, game model.GameCode) (*model.DetailInfo, error) {
-	key := fmt.Sprintf("%s|%s", obj.Code, game.String())
+func (c *cardResolver) Detail(ctx context.Context, obj *model.Card) (*model.DetailInfo, error) {
+	key := fmt.Sprintf("%s|%s", obj.Code, obj.Game.Code)
 	detailLoader, err := middleware.DetailLoaderFromContext(ctx)
 	if err != nil {
 		return nil, err

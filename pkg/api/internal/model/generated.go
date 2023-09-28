@@ -18,6 +18,7 @@ type Card struct {
 	Currency  *Currency   `json:"currency"`
 	Image     *string     `json:"image,omitempty"`
 	Score     *int        `json:"score,omitempty"`
+	Game      *Game       `json:"game,omitempty"`
 	Detail    *DetailInfo `json:"detail,omitempty"`
 }
 

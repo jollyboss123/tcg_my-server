@@ -74,7 +74,7 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	errCh := make(chan error, 1)
 	done := make(chan bool)
 
-	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, g.ImageEndpoint))
+	c.OnHTML("div[id=card-list3]", y.processHTML(ctx, &cs, errCh, g))
 
 	var mu sync.Mutex
 	numVisited := 0
@@ -119,7 +119,7 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	}
 }
 
-func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, imageURL string) func(*colly.HTMLElement) {
+func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, game *game.Game) func(*colly.HTMLElement) {
 	c, err := y.cs.Fetch(ctx, "JPY")
 	if err != nil {
 		y.logger.Warn("failed to fetch currency", slog.String("error", err.Error()))
@@ -140,7 +140,7 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, im
 			id := strings.Split(imgURL, "/card/")
 			if len(id) > 1 {
 				if !strings.Contains(imgSrc, "noimage") {
-					card.Image = imageURL + id[1] + ".jpg"
+					card.Image = game.ImageEndpoint + id[1] + ".jpg"
 				}
 			} else {
 				y.logger.Warn("failed to crawl image", slog.String("error", "no /card/ in url"))
@@ -150,6 +150,7 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, im
 			card.JpName = el.ChildText("a > h4")
 			card.Source = y.source
 			card.Currency = c
+			card.Game = game
 			*cs = append(*cs, &card)
 
 			y.logger.Debug("card info", slog.String("name", card.JpName),
