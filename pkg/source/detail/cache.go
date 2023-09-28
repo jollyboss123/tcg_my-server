@@ -37,6 +37,8 @@ func NewCachedDetailService(
 	}
 }
 
+// Fetch fetches cards based on the provided code from the cache or from external services.
+// If the cache has entries for the given code, it fetches from the cache; otherwise, it fetches from services.
 func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
 	code = strings.ToUpper(code)
 	_, err := c.gs.Fetch(ctx, game)
@@ -44,10 +46,13 @@ func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.De
 		c.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 		return nil, err
 	}
-	cacheKey := fmt.Sprintf("detail||%s||%s", game, code)
+	uID := code
+	setKey := fmt.Sprintf("game:identifiers:%s", game)
+	hashKey := fmt.Sprintf("game:data:%s", game)
 
-	val, err := c.cache.Get(ctx, cacheKey).Result()
-	if err == nil && val != "" {
+	exists, err := c.cache.SIsMember(ctx, setKey, code).Result()
+	if err == nil && exists {
+		val, err := c.cache.HGet(ctx, hashKey, uID).Result()
 		c.logger.Info("cache hit", slog.String("code", code), slog.String("game", game))
 		var info *source.DetailInfo
 		err = json.Unmarshal([]byte(val), &info)
@@ -71,14 +76,31 @@ func (c *cachedDetail) Fetch(ctx context.Context, code, game string) (*source.De
 		return nil, err
 	}
 
+	err = c.cache.SAdd(ctx, setKey, uID).Err()
+	if err != nil {
+		c.logger.Warn("set add cache", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return info, nil
+	}
+	err = c.cache.Expire(ctx, setKey, c.cfg.Cache.CacheTime).Err()
+	if err != nil {
+		c.logger.Warn("set sets cache expiry", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return info, nil
+	}
+
 	cacheEntry, err := json.Marshal(info)
-	if err == nil && info != nil {
-		err = c.cache.Set(ctx, cacheKey, cacheEntry, c.cfg.Cache.CacheTime).Err()
-		if err != nil {
-			c.logger.Warn("set cache", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
-		}
-	} else {
+	if err != nil {
 		c.logger.Warn("marshal cache data", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return info, nil
+	}
+	err = c.cache.HSet(ctx, hashKey, uID, cacheEntry).Err()
+	if err != nil {
+		c.logger.Warn("set cache", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return info, nil
+	}
+	err = c.cache.Expire(ctx, hashKey, c.cfg.Cache.CacheTime).Err()
+	if err != nil {
+		c.logger.Warn("set hash set cache expiry", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return info, nil
 	}
 
 	return info, nil
