@@ -3,7 +3,9 @@ package detail
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gocolly/colly/v2"
+	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
 	"net/url"
@@ -15,19 +17,31 @@ import (
 type ygo struct {
 	endpoint string
 	logger   *slog.Logger
+	gs       gg.Service
 }
 
-func NewYGO(logger *slog.Logger) source.DetailService {
+func NewYGO(logger *slog.Logger, gs gg.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ygo"))
 	return &ygo{
 		endpoint: "https://yugipedia.com/wiki/",
 		logger:   child,
+		gs:       gs,
 	}
 }
 
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
 func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
+	_, err := y.gs.Fetch(ctx, game)
+	if err != nil {
+		y.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+	if !strings.EqualFold(gg.YGO, game) {
+		y.logger.Error("check game code", slog.String("error", fmt.Errorf("this detail service does not support %s", game).Error()))
+		return nil, err
+	}
+
 	query := strings.ToUpper(code)
 	baseURL, err := url.Parse(y.endpoint + query)
 	if err != nil {
@@ -40,6 +54,9 @@ func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 		colly.AllowURLRevisit(),
 		colly.Async(true),
 	)
+
+	// setting a valid User-Agent header
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yugipedia.com/*",

@@ -58,6 +58,9 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 		colly.Async(true),
 	)
 
+	// setting a valid User-Agent header
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yuyu-tei.jp/*",
 		Delay:       1 * time.Second,
