@@ -127,23 +127,19 @@ type GameCode string
 
 const (
 	GameCodeYgo GameCode = "YGO"
-	GameCodePoc GameCode = "POC"
-	GameCodeVg  GameCode = "VG"
 	GameCodeOpc GameCode = "OPC"
 	GameCodeWs  GameCode = "WS"
 )
 
 var AllGameCode = []GameCode{
 	GameCodeYgo,
-	GameCodePoc,
-	GameCodeVg,
 	GameCodeOpc,
 	GameCodeWs,
 }
 
 func (e GameCode) IsValid() bool {
 	switch e {
-	case GameCodeYgo, GameCodePoc, GameCodeVg, GameCodeOpc, GameCodeWs:
+	case GameCodeYgo, GameCodeOpc, GameCodeWs:
 		return true
 	}
 	return false

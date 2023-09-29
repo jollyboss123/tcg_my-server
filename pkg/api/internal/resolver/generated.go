@@ -740,8 +740,8 @@ enum BanStatus {
 
 enum GameCode {
     YGO
-    POC
-    VG
+#    POC
+#    VG
     OPC
     WS
 }
