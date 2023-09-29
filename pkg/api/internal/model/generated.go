@@ -47,6 +47,14 @@ type DetailInfo struct {
 	Effect      *string    `json:"effect,omitempty"`
 	Pendulum    *Pendulum  `json:"pendulum,omitempty"`
 	Status      *BanStatus `json:"status,omitempty"`
+	Power       *string    `json:"power,omitempty"`
+	Colors      []*string  `json:"colors,omitempty"`
+	Product     *string    `json:"product,omitempty"`
+	Rarity      *string    `json:"rarity,omitempty"`
+	Life        *string    `json:"life,omitempty"`
+	Category    *string    `json:"category,omitempty"`
+	Cost        *string    `json:"cost,omitempty"`
+	Counter     *string    `json:"counter,omitempty"`
 }
 
 type ExchangeRate struct {

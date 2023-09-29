@@ -42,6 +42,14 @@ type DetailInfo struct {
 	Effect      string
 	Pendulum    Pendulum
 	Status      BanStatus
+	Power       string
+	Colors      []string
+	Product     string
+	Rarity      string
+	Life        string
+	Category    string
+	Cost        string
+	Counter     string
 }
 
 type Pendulum struct {

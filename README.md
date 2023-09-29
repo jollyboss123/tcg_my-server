@@ -82,3 +82,4 @@ in hashes can be more space-efficient than simple k-v pair when there's lots of 
 * [Load real env vars in production and use a .env locally](https://github.com/joho/godotenv/issues/40)
 * [How to combine Redis commands 'expire' and 'sadd' into one command?](https://stackoverflow.com/questions/62575672/how-to-combine-redis-commands-expire-and-sadd-into-one-command)
 * [Don’t eagerly fetch the user](https://gqlgen.com/getting-started/#dont-eagerly-fetch-the-user)
+* [Chromedp: Golang Headless Browser Tutorial 2023](https://www.zenrows.com/blog/chromedp)
