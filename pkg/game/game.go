@@ -37,18 +37,18 @@ var games = Games{
 		Endpoint:      "https://yuyu-tei.jp/sell/ygo/s/search",
 		ImageEndpoint: "https://img.yuyu-tei.jp/card_image/ygo/front/",
 	},
-	POC: {
-		Title:         "Pokemon",
-		Image:         "https://yuyu-tei.jp/images/gamelogo/poc.svg",
-		Endpoint:      "https://yuyu-tei.jp/sell/poc/s/search",
-		ImageEndpoint: "https://img.yuyu-tei.jp/card_image/poc/front/",
-	},
-	VG: {
-		Title:         "Card Fight!! Vanguard",
-		Image:         "https://yuyu-tei.jp/images/gamelogo/vg.svg",
-		Endpoint:      "https://yuyu-tei.jp/sell/vg/s/search",
-		ImageEndpoint: "https://img.yuyu-tei.jp/card_image/vg/front/",
-	},
+	//POC: {
+	//	Title:         "Pokemon",
+	//	Image:         "https://yuyu-tei.jp/images/gamelogo/poc.svg",
+	//	Endpoint:      "https://yuyu-tei.jp/sell/poc/s/search",
+	//	ImageEndpoint: "https://img.yuyu-tei.jp/card_image/poc/front/",
+	//},
+	//VG: {
+	//	Title:         "Card Fight!! Vanguard",
+	//	Image:         "https://yuyu-tei.jp/images/gamelogo/vg.svg",
+	//	Endpoint:      "https://yuyu-tei.jp/sell/vg/s/search",
+	//	ImageEndpoint: "https://img.yuyu-tei.jp/card_image/vg/front/",
+	//},
 	OPC: {
 		Title:         "One Piece Card Game",
 		Image:         "https://yuyu-tei.jp/images/gamelogo/opc.svg",

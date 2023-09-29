@@ -6,8 +6,8 @@ type Game {
 
 enum GameCode {
     YGO
-    POC
-    VG
+#    POC
+#    VG
     OPC
     WS
 }
