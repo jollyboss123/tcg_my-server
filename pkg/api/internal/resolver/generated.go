@@ -89,7 +89,10 @@ type ComplexityRoot struct {
 		Product     func(childComplexity int) int
 		Property    func(childComplexity int) int
 		Rarity      func(childComplexity int) int
+		Soul        func(childComplexity int) int
 		Status      func(childComplexity int) int
+		Traits      func(childComplexity int) int
+		Trigger     func(childComplexity int) int
 		Types       func(childComplexity int) int
 	}
 
@@ -412,12 +415,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DetailInfo.Rarity(childComplexity), true
 
+	case "DetailInfo.soul":
+		if e.complexity.DetailInfo.Soul == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Soul(childComplexity), true
+
 	case "DetailInfo.status":
 		if e.complexity.DetailInfo.Status == nil {
 			break
 		}
 
 		return e.complexity.DetailInfo.Status(childComplexity), true
+
+	case "DetailInfo.traits":
+		if e.complexity.DetailInfo.Traits == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Traits(childComplexity), true
+
+	case "DetailInfo.trigger":
+		if e.complexity.DetailInfo.Trigger == nil {
+			break
+		}
+
+		return e.complexity.DetailInfo.Trigger(childComplexity), true
 
 	case "DetailInfo.types":
 		if e.complexity.DetailInfo.Types == nil {
@@ -665,6 +689,9 @@ type DetailInfo {
     category: String
     cost: String
     counter: String
+    traits: [String]
+    trigger: String
+    soul: String
 }
 
 type Pendulum {
@@ -1397,6 +1424,12 @@ func (ec *executionContext) fieldContext_Card_detail(ctx context.Context, field 
 				return ec.fieldContext_DetailInfo_cost(ctx, field)
 			case "counter":
 				return ec.fieldContext_DetailInfo_counter(ctx, field)
+			case "traits":
+				return ec.fieldContext_DetailInfo_traits(ctx, field)
+			case "trigger":
+				return ec.fieldContext_DetailInfo_trigger(ctx, field)
+			case "soul":
+				return ec.fieldContext_DetailInfo_soul(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DetailInfo", field.Name)
 		},
@@ -2610,6 +2643,129 @@ func (ec *executionContext) _DetailInfo_counter(ctx context.Context, field graph
 }
 
 func (ec *executionContext) fieldContext_DetailInfo_counter(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_traits(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_traits(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Traits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_traits(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_trigger(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_trigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Trigger, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_trigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DetailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DetailInfo_soul(ctx context.Context, field graphql.CollectedField, obj *model.DetailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DetailInfo_soul(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Soul, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DetailInfo_soul(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DetailInfo",
 		Field:      field,
@@ -5494,6 +5650,12 @@ func (ec *executionContext) _DetailInfo(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._DetailInfo_cost(ctx, field, obj)
 		case "counter":
 			out.Values[i] = ec._DetailInfo_counter(ctx, field, obj)
+		case "traits":
+			out.Values[i] = ec._DetailInfo_traits(ctx, field, obj)
+		case "trigger":
+			out.Values[i] = ec._DetailInfo_trigger(ctx, field, obj)
+		case "soul":
+			out.Values[i] = ec._DetailInfo_soul(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

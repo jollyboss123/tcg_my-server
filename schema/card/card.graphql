@@ -35,6 +35,9 @@ type DetailInfo {
     category: String
     cost: String
     counter: String
+    traits: [String]
+    trigger: String
+    soul: String
 }
 
 type Pendulum {

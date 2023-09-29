@@ -50,6 +50,9 @@ type DetailInfo struct {
 	Category    string
 	Cost        string
 	Counter     string
+	Traits      []string
+	Trigger     string
+	Soul        string
 }
 
 type Pendulum struct {

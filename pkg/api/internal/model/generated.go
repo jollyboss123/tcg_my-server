@@ -55,6 +55,9 @@ type DetailInfo struct {
 	Category    *string    `json:"category,omitempty"`
 	Cost        *string    `json:"cost,omitempty"`
 	Counter     *string    `json:"counter,omitempty"`
+	Traits      []*string  `json:"traits,omitempty"`
+	Trigger     *string    `json:"trigger,omitempty"`
+	Soul        *string    `json:"soul,omitempty"`
 }
 
 type ExchangeRate struct {
