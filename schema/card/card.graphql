@@ -27,6 +27,14 @@ type DetailInfo {
     effect: String #card effect
     pendulum: Pendulum
     status: BanStatus
+    power: String
+    colors: [String]
+    product: String
+    rarity: String
+    life: String
+    category: String
+    cost: String
+    counter: String
 }
 
 type Pendulum {

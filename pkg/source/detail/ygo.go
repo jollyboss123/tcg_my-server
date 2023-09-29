@@ -31,7 +31,7 @@ func NewYGO(logger *slog.Logger, gs gg.Service) source.DetailService {
 
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
-func (y ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
+func (y *ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
 	_, err := y.gs.Fetch(ctx, game)
 	if err != nil {
 		y.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))

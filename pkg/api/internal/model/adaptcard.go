@@ -49,6 +49,12 @@ func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
 			effects[i] = &d.EffectTypes[i]
 		}
 	}
+	var colors = make([]*string, len(d.Colors))
+	if d.Colors != nil && len(d.Colors) > 0 {
+		for i := range d.Colors {
+			colors[i] = &d.Colors[i]
+		}
+	}
 	return &DetailInfo{
 		EngName:     &d.EngName,
 		CardType:    &d.CardType,
@@ -64,6 +70,14 @@ func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
 		EffectTypes: effects,
 		Pendulum:    ToPendulum(&d.Pendulum),
 		Status:      (*BanStatus)(&d.Status),
+		Power:       &d.Power,
+		Colors:      colors,
+		Product:     &d.Product,
+		Rarity:      &d.Rarity,
+		Life:        &d.Life,
+		Category:    &d.Category,
+		Cost:        &d.Cost,
+		Counter:     &d.Counter,
 	}
 }
 
