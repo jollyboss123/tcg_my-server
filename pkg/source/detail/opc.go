@@ -101,12 +101,12 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 						o.logger.Debug("fetch value node", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 						return err
 					}
-					titleText, err := o.extractText(ctx, titleNode)
+					title, err := o.extractText(ctx, titleNode)
 					if err != nil {
 						o.logger.Debug("fetch title text", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 						return err
 					}
-					switch titleText {
+					switch title {
 					case "Name":
 						detail.EngName, err = o.extractText(ctx, valueNode)
 						o.logger.Debug("fetch name", slog.String("code", code), slog.String("game", game))

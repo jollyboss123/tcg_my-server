@@ -7,7 +7,7 @@ from [bigweb](https://bigweb.co.jp/) and [YUYU-TEI](https://yuyu-tei.jp/).
 
 ## High Level Design
 
-1. web scraping with [go-colly](https://github.com/gocolly/colly)
+1. web scraping with [go-colly](https://github.com/gocolly/colly) and [chromedp](https://github.com/chromedp/chromedp)
 2. graphql http caching
    with [apq](https://www.apollographql.com/docs/resources/graphql-glossary/#automatic-persisted-queries-apq) and lru
    cache

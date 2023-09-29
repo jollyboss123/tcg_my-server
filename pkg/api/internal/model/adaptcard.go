@@ -55,6 +55,12 @@ func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
 			colors[i] = &d.Colors[i]
 		}
 	}
+	var traits = make([]*string, len(d.Traits))
+	if d.Traits != nil && len(d.Traits) > 0 {
+		for i := range d.Traits {
+			traits[i] = &d.Traits[i]
+		}
+	}
 	return &DetailInfo{
 		EngName:     &d.EngName,
 		CardType:    &d.CardType,
@@ -78,6 +84,9 @@ func ToDetailInfo(d *source.DetailInfo) *DetailInfo {
 		Category:    &d.Category,
 		Cost:        &d.Cost,
 		Counter:     &d.Counter,
+		Traits:      traits,
+		Trigger:     &d.Trigger,
+		Soul:        &d.Soul,
 	}
 }
 
