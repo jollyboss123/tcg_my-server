@@ -5,7 +5,7 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for ret
 
 ## High Level Design
 
-1. web scraping with [go-colly](https://github.com/gocolly/colly)
+1. web scraping with [go-colly](https://github.com/gocolly/colly) and [chromedp](https://github.com/chromedp/chromedp)
 2. graphql http caching
    with [apq](https://www.apollographql.com/docs/resources/graphql-glossary/#automatic-persisted-queries-apq) and lru
    cache
@@ -20,6 +20,11 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for ret
 | playground | /graphiql |
 | query      | /query    |
 | health     | /health   |
+
+## Project status
+Current code status: **proof of concept** and deployed on **dockerhub** @ `jollyboss/tcg_my-server`.
+This is the first serious Go application that I've ever written. It has no tests. It may not work.
+It may blow up. Use at your own risk.
 
 ## Redis
 

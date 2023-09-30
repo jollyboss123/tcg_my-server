@@ -15,7 +15,7 @@ services:
       - "REDIS_NAME=0"
       - "REDIS_CACHE_TIME=5m"
       - "REDIS_ENABLE=true"
-      - "RATE_KEY=2b288976f9cb33e2ecb73d4d60cbf718"
+      - "RATE_KEY=****" #replace with your API key
       - "RATE_ENDPOINT=http://api.exchangeratesapi.io/v1/latest"
     build:
       context: .

@@ -17,7 +17,6 @@ import (
 )
 
 type ws struct {
-	//endpoint string
 	logger *slog.Logger
 	gs     gg.Service
 }
@@ -25,7 +24,6 @@ type ws struct {
 func NewWS(logger *slog.Logger, gs gg.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ws"))
 	return &ws{
-		//endpoint: "https://www.heartofthecards.com/code/cardlist.html?card=WS_",
 		logger: child,
 		gs:     gs,
 	}
