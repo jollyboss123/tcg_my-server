@@ -2,12 +2,14 @@ package detail
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -15,22 +17,22 @@ import (
 )
 
 type ws struct {
-	endpoint string
-	logger   *slog.Logger
-	gs       gg.Service
+	//endpoint string
+	logger *slog.Logger
+	gs     gg.Service
 }
 
 func NewWS(logger *slog.Logger, gs gg.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ws"))
 	return &ws{
-		endpoint: "https://www.heartofthecards.com/code/cardlist.html?card=WS_",
-		logger:   child,
-		gs:       gs,
+		//endpoint: "https://www.heartofthecards.com/code/cardlist.html?card=WS_",
+		logger: child,
+		gs:     gs,
 	}
 }
 
 func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
-	_, err := w.gs.Fetch(ctx, game)
+	g, err := w.gs.Fetch(ctx, game)
 	if err != nil {
 		w.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 		return nil, err
@@ -41,9 +43,18 @@ func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	}
 
 	query := strings.ToUpper(code)
-	baseURL, err := url.Parse(w.endpoint + query)
+	match, err := regexp.MatchString(g.CodeFormat, query)
 	if err != nil {
-		w.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", w.endpoint))
+		w.logger.Error("check code format", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+	if !match {
+		w.logger.Error("check code format", slog.String("error", errors.New("code format mismatch").Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+	baseURL, err := url.Parse(g.DetailEndpoint + query)
+	if err != nil {
+		w.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", g.DetailEndpoint))
 		return nil, err
 	}
 

@@ -9,30 +9,29 @@ import (
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
 
 type ygo struct {
-	endpoint string
-	logger   *slog.Logger
-	gs       gg.Service
+	logger *slog.Logger
+	gs     gg.Service
 }
 
 func NewYGO(logger *slog.Logger, gs gg.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ygo"))
 	return &ygo{
-		endpoint: "https://yugipedia.com/wiki/",
-		logger:   child,
-		gs:       gs,
+		logger: child,
+		gs:     gs,
 	}
 }
 
 var ErrExceedRequestLimit = errors.New("request limit reached")
 
 func (y *ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
-	_, err := y.gs.Fetch(ctx, game)
+	g, err := y.gs.Fetch(ctx, game)
 	if err != nil {
 		y.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 		return nil, err
@@ -43,9 +42,19 @@ func (y *ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 	}
 
 	query := strings.ToUpper(code)
-	baseURL, err := url.Parse(y.endpoint + query)
+	match, err := regexp.MatchString(g.CodeFormat, query)
 	if err != nil {
-		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", y.endpoint))
+		y.logger.Error("check code format", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+	if !match {
+		y.logger.Error("check code format", slog.String("error", errors.New("code format mismatch").Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+
+	baseURL, err := url.Parse(g.DetailEndpoint + query)
+	if err != nil {
+		y.logger.Error("parsing url", slog.String("error", err.Error()), slog.String("url", g.DetailEndpoint))
 		return nil, err
 	}
 

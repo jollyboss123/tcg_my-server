@@ -32,10 +32,12 @@ func (g Games) FetchAll() []*Game {
 
 var games = Games{
 	YGO: {
-		Title:         "Yu-Gi-Oh!",
-		Image:         "https://yuyu-tei.jp/images/gamelogo/ygo.svg",
-		Endpoint:      "https://yuyu-tei.jp/sell/ygo/s/search",
-		ImageEndpoint: "https://img.yuyu-tei.jp/card_image/ygo/front/",
+		Title:          "Yu-Gi-Oh!",
+		Image:          "https://yuyu-tei.jp/images/gamelogo/ygo.svg",
+		Endpoint:       "https://yuyu-tei.jp/sell/ygo/s/search",
+		ImageEndpoint:  "https://img.yuyu-tei.jp/card_image/ygo/front/",
+		DetailEndpoint: "https://yugipedia.com/wiki/",
+		CodeFormat:     "^[A-Za-z0-9]+-[A-Za-z0-9]+$", //DBVS-JP010
 	},
 	//POC: {
 	//	Title:         "Pokemon",
@@ -50,10 +52,12 @@ var games = Games{
 	//	ImageEndpoint: "https://img.yuyu-tei.jp/card_image/vg/front/",
 	//},
 	OPC: {
-		Title:         "One Piece Card Game",
-		Image:         "https://yuyu-tei.jp/images/gamelogo/opc.svg",
-		Endpoint:      "https://yuyu-tei.jp/sell/opc/s/search",
-		ImageEndpoint: "https://img.yuyu-tei.jp/card_image/opc/front/",
+		Title:          "One Piece Card Game",
+		Image:          "https://yuyu-tei.jp/images/gamelogo/opc.svg",
+		Endpoint:       "https://yuyu-tei.jp/sell/opc/s/search",
+		ImageEndpoint:  "https://img.yuyu-tei.jp/card_image/opc/front/",
+		DetailEndpoint: "https://onepiece-cardgame.dev/cards",
+		CodeFormat:     "^[A-Za-z0-9]+-[A-Za-z0-9]+$", //OP05-010
 	},
 	WS: {
 		Title:          "Weiss Schwarz",
@@ -61,5 +65,6 @@ var games = Games{
 		Endpoint:       "https://yuyu-tei.jp/sell/ws/s/search",
 		ImageEndpoint:  "https://img.yuyu-tei.jp/card_image/ws/front/",
 		DetailEndpoint: "https://www.heartofthecards.com/code/cardlist.html?card=WS_",
+		CodeFormat:     "^[A-Za-z0-9]+/[A-Za-z0-9]+-[A-Za-z0-9]+$", //BTR/W107-001SSP || BTR/W107-001
 	},
 }

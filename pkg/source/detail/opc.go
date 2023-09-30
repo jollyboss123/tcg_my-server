@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	er "errors"
 	"fmt"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -13,37 +14,36 @@ import (
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
+	"regexp"
 	"strings"
 	"sync"
 )
 
 type opc struct {
-	endpoint string
-	logger   *slog.Logger
-	gs       gg.Service
+	logger *slog.Logger
+	gs     gg.Service
 }
 
 func NewOPC(logger *slog.Logger, gs gg.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-opc"))
 	return &opc{
-		endpoint: "https://onepiece-cardgame.dev/cards",
-		logger:   child,
-		gs:       gs,
+		logger: child,
+		gs:     gs,
 	}
 }
 
 const (
-	searchBar = "[id=searchBar]"
-	input     = ".MuiOutlinedInput-root.MuiInputBase-sizeSmall .MuiAutocomplete-input"
-	enterKey  = "\r"
-	card      = ".MuiBox-root.css-1xdp8rh"
-	details   = ".MuiBox-root.css-0"
-	firstDiv  = "div:nth-child(1)"
-	secDiv    = "div:nth-child(2)"
+	SearchBar = "[id=searchBar]"
+	Input     = ".MuiOutlinedInput-root.MuiInputBase-sizeSmall .MuiAutocomplete-input"
+	EnterKey  = "\r"
+	Card      = ".MuiBox-root.css-1xdp8rh"
+	Details   = ".MuiBox-root.css-0"
+	FirstDiv  = "div:nth-child(1)"
+	SecDiv    = "div:nth-child(2)"
 )
 
 func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, error) {
-	_, err := o.gs.Fetch(ctx, game)
+	g, err := o.gs.Fetch(ctx, game)
 	if err != nil {
 		o.logger.Error("fetch game", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 		return nil, err
@@ -54,6 +54,15 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 	}
 
 	code = strings.ToUpper(code)
+	match, err := regexp.MatchString(g.CodeFormat, code)
+	if err != nil {
+		o.logger.Error("check code format", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
+	if !match {
+		o.logger.Error("check code format", slog.String("error", er.New("code format mismatch").Error()), slog.String("code", code), slog.String("game", game))
+		return nil, err
+	}
 
 	options := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"),
@@ -67,12 +76,12 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 
 	var detailNodes []*cdp.Node
 	err = chromedp.Run(ctx,
-		chromedp.Navigate(o.endpoint),
-		chromedp.WaitVisible(searchBar),
-		chromedp.SendKeys(input, code),
-		chromedp.SendKeys(input, enterKey),
-		chromedp.Click(card, chromedp.NodeVisible),
-		chromedp.Nodes(details, &detailNodes, chromedp.ByQueryAll),
+		chromedp.Navigate(g.DetailEndpoint),
+		chromedp.WaitVisible(SearchBar),
+		chromedp.SendKeys(Input, code),
+		chromedp.SendKeys(Input, EnterKey),
+		chromedp.Click(Card, chromedp.NodeVisible),
+		chromedp.Nodes(Details, &detailNodes, chromedp.ByQueryAll),
 	)
 
 	if err != nil {
@@ -91,12 +100,12 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 			defer wg.Done()
 			err := chromedp.Run(ctx,
 				chromedp.ActionFunc(func(ctx context.Context) error {
-					titleNode, err := dom.QuerySelector(node.NodeID, firstDiv).Do(ctx)
+					titleNode, err := dom.QuerySelector(node.NodeID, FirstDiv).Do(ctx)
 					if err != nil {
 						o.logger.Debug("fetch title node", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 						return err
 					}
-					valueNode, err := dom.QuerySelector(node.NodeID, secDiv).Do(ctx)
+					valueNode, err := dom.QuerySelector(node.NodeID, SecDiv).Do(ctx)
 					if err != nil {
 						o.logger.Debug("fetch value node", slog.String("error", err.Error()), slog.String("code", code), slog.String("game", game))
 						return err
