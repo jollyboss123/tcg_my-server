@@ -67,7 +67,6 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 
 	options := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.UserAgent(useragent.Random()),
-		//chromedp.ProxyServer("socks5://127.0.0.1:9050"),
 	)
 
 	ctx, cancel := chromedp.NewExecAllocator(context.Background(), options...)

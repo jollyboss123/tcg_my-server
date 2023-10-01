@@ -3,10 +3,13 @@ package source
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
+	"log"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -21,15 +24,17 @@ type yyt struct {
 	logger *slog.Logger
 	cs     currency.Service
 	gs     game.Service
+	ps     proxy.Service
 }
 
-func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service) ScrapeService {
+func NewYYT(logger *slog.Logger, cs currency.Service, gs game.Service, ps proxy.Service) ScrapeService {
 	child := logger.With(slog.String("api", "yyt"))
 	return &yyt{
 		source: "Yuyu-tei",
 		logger: child,
 		cs:     cs,
 		gs:     gs,
+		ps:     ps,
 	}
 }
 
@@ -60,15 +65,16 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	)
 
 	extensions.RandomUserAgent(c)
+	proxyURL, err := y.ps.FetchProxyURL()
+	if err != nil {
+		log.Fatal(err)
+	}
 	//proxySwitcher, err := proxy.RoundRobinProxySwitcher("socks5://188.226.141.127:1080", "socks5://67.205.132.241:1080")
-	//proxySwitcher, err := proxy.RoundRobinProxySwitcher("socks5://127.0.0.1:9050")
+	//proxySwitcher, err := cp.RoundRobinProxySwitcher(proxyURL)
 	//if err != nil {
 	//	log.Fatal(err)
 	//}
 	//c.SetProxyFunc(proxySwitcher)
-
-	// setting a valid User-Agent header
-	//c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yuyu-tei.jp/*",
@@ -89,6 +95,12 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
+		targetURL := r.URL.String()
+		escapedURL := url.PathEscape(targetURL)
+		newURL := fmt.Sprintf("%s/%s", proxyURL, escapedURL)
+
+		r.URL, _ = url.Parse(newURL)
+
 		mu.Lock()
 		numVisited++
 		mu.Unlock()

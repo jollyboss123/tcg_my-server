@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/middleware"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
@@ -64,13 +65,17 @@ func (s *Server) InitRouter() {
 	})
 }
 
+func (s *Server) proxyService() proxy.Service {
+	return proxy.NewService(s.log)
+}
+
 func (s *Server) scrapeService() source.ScrapeService {
 	return source.NewCachedScrapeService(
 		s.cache,
 		s.cfg,
 		s.log,
 		s.gameService(),
-		source.NewYYT(s.log, s.currencyService(), s.gameService()),
+		source.NewYYT(s.log, s.currencyService(), s.gameService(), s.proxyService()),
 		//source.NewBigWeb(s.log), //disabled bigweb for now
 	)
 }

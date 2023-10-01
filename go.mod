@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/99designs/gqlgen v0.17.37
+	github.com/aws/aws-sdk-go v1.45.19
 	github.com/chromedp/cdproto v0.0.0-20230914224007-a15a36ccbc2e
 	github.com/chromedp/chromedp v0.9.2
 	github.com/go-chi/chi/v5 v5.0.10
@@ -36,6 +37,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
