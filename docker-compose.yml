@@ -30,3 +30,17 @@ services:
       - "6379:6379"
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+
+  tor-proxy:
+    container_name: 'tor-proxy'
+    build: .
+    image: 'tor-app:latest'
+    ports:
+      - '9050:9050'
+    restart: always
+#  tor-bar:
+#    container_name: 'tor-bar'
+#    image: 'tor-app:latest'
+#    ports:
+#      - '9051:9050'
+#    restart: always

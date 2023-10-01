@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/extensions"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
@@ -64,8 +65,9 @@ func (y *ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 		colly.Async(true),
 	)
 
+	extensions.RandomUserAgent(c)
 	// setting a valid User-Agent header
-	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+	//c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yugipedia.com/*",

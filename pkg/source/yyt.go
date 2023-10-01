@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/extensions"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"log/slog"
@@ -58,13 +59,22 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 		colly.Async(true),
 	)
 
+	extensions.RandomUserAgent(c)
+	//proxySwitcher, err := proxy.RoundRobinProxySwitcher("socks5://188.226.141.127:1080", "socks5://67.205.132.241:1080")
+	//proxySwitcher, err := proxy.RoundRobinProxySwitcher("socks5://127.0.0.1:9050")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//c.SetProxyFunc(proxySwitcher)
+
 	// setting a valid User-Agent header
-	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+	//c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yuyu-tei.jp/*",
 		Delay:       1 * time.Second,
 		RandomDelay: 1 * time.Second,
+		Parallelism: 4,
 	})
 	if err != nil {
 		y.logger.Error("colly limit rule", slog.String("error", err.Error()))

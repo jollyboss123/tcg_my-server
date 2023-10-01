@@ -11,6 +11,7 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/jollyboss123/tcg_my-server"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/useragent"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
@@ -65,7 +66,8 @@ func (o *opc) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 	}
 
 	options := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"),
+		chromedp.UserAgent(useragent.Random()),
+		//chromedp.ProxyServer("socks5://127.0.0.1:9050"),
 	)
 
 	ctx, cancel := chromedp.NewExecAllocator(context.Background(), options...)

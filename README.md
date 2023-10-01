@@ -22,9 +22,14 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for ret
 | health     | /health   |
 
 ## Project status
-Current code status: **proof of concept** and deployed on **dockerhub** @ `jollyboss/tcg_my-server`.
+Current code status: **proof of concept**.
 This is the first serious Go application that I've ever written. It has no tests. It may not work.
 It may blow up. Use at your own risk.
+
+## Docker
+```shell
+docker pull jollyboss/tcg_my-server
+```
 
 ## Redis
 

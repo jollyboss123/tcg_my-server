@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/extensions"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
@@ -62,7 +63,8 @@ func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 		colly.Async(true),
 	)
 
-	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+	extensions.RandomUserAgent(c)
+	//c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "www.heartofthecards.com/*",
