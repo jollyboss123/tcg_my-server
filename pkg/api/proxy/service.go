@@ -125,6 +125,11 @@ func (s *service) fetchProxies(ctx context.Context) ([]*apigateway.RestApi, erro
 }
 
 func (s *service) RoundRobinProxy(ctx context.Context, targetURL string) (string, error) {
+	if !s.cfg.Api.ProxyEnabled {
+		s.logger.Info("proxy disabled")
+		return targetURL, nil
+	}
+
 	if len(targetURL) == 0 {
 		s.logger.Error("check target url", slog.String("error", ErrEmptyTargetURL.Error()))
 		return "", ErrEmptyTargetURL
