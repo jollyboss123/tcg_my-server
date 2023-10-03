@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
@@ -20,13 +21,15 @@ import (
 type ws struct {
 	logger *slog.Logger
 	gs     gg.Service
+	ps     proxy.Service
 }
 
-func NewWS(logger *slog.Logger, gs gg.Service) source.DetailService {
+func NewWS(logger *slog.Logger, gs gg.Service, ps proxy.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ws"))
 	return &ws{
 		logger: child,
 		gs:     gs,
+		ps:     ps,
 	}
 }
 
@@ -64,7 +67,6 @@ func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	)
 
 	extensions.RandomUserAgent(c)
-	//c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "www.heartofthecards.com/*",
@@ -137,6 +139,13 @@ func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
+		newURL, err := w.ps.RoundRobinProxy(ctx, r.URL.String())
+		if err != nil {
+			errCh <- err
+		}
+
+		r.URL, _ = url.Parse(newURL)
+
 		mu.Lock()
 		numVisited++
 		mu.Unlock()

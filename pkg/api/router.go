@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/internal/middleware"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/rate"
@@ -64,13 +65,17 @@ func (s *Server) InitRouter() {
 	})
 }
 
+func (s *Server) proxyService() proxy.Service {
+	return proxy.NewService(s.log, s.cache, s.cfg)
+}
+
 func (s *Server) scrapeService() source.ScrapeService {
 	return source.NewCachedScrapeService(
 		s.cache,
 		s.cfg,
 		s.log,
 		s.gameService(),
-		source.NewYYT(s.log, s.currencyService(), s.gameService()),
+		source.NewYYT(s.log, s.currencyService(), s.gameService(), s.proxyService()),
 		//source.NewBigWeb(s.log), //disabled bigweb for now
 	)
 }
@@ -95,9 +100,9 @@ func (s *Server) gameService() game.Service {
 
 func (s *Server) detailService() source.DetailService {
 	services := map[string]source.DetailService{
-		game.YGO: detail.NewYGO(s.log, s.gameService()),
+		game.YGO: detail.NewYGO(s.log, s.gameService(), s.proxyService()),
 		game.OPC: detail.NewOPC(s.log, s.gameService()),
-		game.WS:  detail.NewWS(s.log, s.gameService()),
+		game.WS:  detail.NewWS(s.log, s.gameService(), s.proxyService()),
 	}
 
 	return detail.NewCachedDetailService(

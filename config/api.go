@@ -11,6 +11,7 @@ type Api struct {
 	Port              string        `default:"3080"`
 	ReadHeaderTimeout time.Duration `split_words:"true" default:"60s"`
 	GracefulTimeout   time.Duration `split_words:"true" default:"8s"`
+	ProxyEnabled      bool          `split_words:"true" default:"false"`
 }
 
 func API() Api {

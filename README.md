@@ -11,7 +11,8 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for ret
    cache
 3. graphql response caching with redis
 4. dataloader for memoization caching at the query layer
-4. structured logging with [slog](https://go.dev/blog/slog)
+5. structured logging with [slog](https://go.dev/blog/slog)
+6. proxy with [aws api gateway](https://aws.amazon.com/api-gateway/) for ip rotation
 
 ## Endpoints
 
@@ -91,3 +92,4 @@ in hashes can be more space-efficient than simple k-v pair when there's lots of 
 * [How to combine Redis commands 'expire' and 'sadd' into one command?](https://stackoverflow.com/questions/62575672/how-to-combine-redis-commands-expire-and-sadd-into-one-command)
 * [Don’t eagerly fetch the user](https://gqlgen.com/getting-started/#dont-eagerly-fetch-the-user)
 * [Chromedp: Golang Headless Browser Tutorial 2023](https://www.zenrows.com/blog/chromedp)
+* [requests-ip-rotator](https://github.com/Ge0rg3/requests-ip-rotator/tree/main)
