@@ -83,8 +83,9 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
-		newURL, err := y.ps.RoundRobinProxy(ctx, r.URL.String())
+		newURL, err := y.ps.RoundRobinProxy(ctx, r.URL.String(), r.Headers)
 		if err != nil {
+			y.logger.Error("round robin proxy", slog.String("error", err.Error()))
 			errCh <- err
 		}
 
@@ -147,7 +148,6 @@ func (y *yyt) processHTML(ctx context.Context, cs *[]*Card, errCh chan error, ga
 			}
 			imgURL := el.ChildAttr("a", "href")
 			imgSrc := el.ChildAttr("div .product-img img", "src")
-			y.logger.Info("here: " + imgSrc)
 			id := strings.Split(imgURL, "/card/")
 			if len(id) > 1 {
 				if !strings.Contains(imgSrc, "noimage") {

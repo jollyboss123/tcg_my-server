@@ -139,8 +139,9 @@ func (w *ws) Fetch(ctx context.Context, code, game string) (*source.DetailInfo, 
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
-		newURL, err := w.ps.RoundRobinProxy(ctx, r.URL.String())
+		newURL, err := w.ps.RoundRobinProxy(ctx, r.URL.String(), r.Headers)
 		if err != nil {
+			w.logger.Error("round robin proxy", slog.String("error", err.Error()))
 			errCh <- err
 		}
 

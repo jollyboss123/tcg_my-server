@@ -11,6 +11,8 @@ import (
 	"github.com/jollyboss123/tcg_my-server/config"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
+	"math/rand"
+	"net/http"
 	"sync/atomic"
 )
 
@@ -25,7 +27,7 @@ type service struct {
 
 type Service interface {
 	FetchProxyURL() (string, error)
-	RoundRobinProxy(ctx context.Context, targetURL string) (string, error)
+	RoundRobinProxy(ctx context.Context, targetURL string, headers *http.Header) (string, error)
 }
 
 func NewService(logger *slog.Logger, cache *redis.Client, cfg *config.Config) Service {
@@ -124,7 +126,7 @@ func (s *service) fetchProxies(ctx context.Context) ([]*apigateway.RestApi, erro
 	return result.Items, nil
 }
 
-func (s *service) RoundRobinProxy(ctx context.Context, targetURL string) (string, error) {
+func (s *service) RoundRobinProxy(ctx context.Context, targetURL string, headers *http.Header) (string, error) {
 	if !s.cfg.Api.ProxyEnabled {
 		s.logger.Info("proxy disabled")
 		return targetURL, nil
@@ -148,9 +150,19 @@ func (s *service) RoundRobinProxy(ctx context.Context, targetURL string) (string
 	}
 
 	proxy := s.proxies[index%uint32(len(s.proxies))]
+	xForwardedFor := headers.Get("X-Forwarded-For")
+	if xForwardedFor == "" {
+		xForwardedFor = randomIPv4()
+	}
+	headers.Del("X-Forwarded-For")
+	headers.Set("X-My-X-Forwarded-For", xForwardedFor)
 
 	return fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s/%s",
 		*proxy.Id,
 		s.region,
 		"prod", targetURL), nil
+}
+
+func randomIPv4() string {
+	return fmt.Sprintf("%d.%d.%d.%d", rand.Intn(256), rand.Intn(256), rand.Intn(256), rand.Intn(256))
 }

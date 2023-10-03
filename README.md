@@ -12,7 +12,7 @@ Server for [TCG.MY](https://github.com/hollandgeng/TCG.MY). GraphQL APIs for ret
 3. graphql response caching with redis
 4. dataloader for memoization caching at the query layer
 5. structured logging with [slog](https://go.dev/blog/slog)
-6. proxy with [aws api gateway](https://aws.amazon.com/api-gateway/) for ip rotation
+6. round robin proxy with [aws api gateway](https://aws.amazon.com/api-gateway/) for ip rotation
 
 ## Endpoints
 
@@ -80,6 +80,13 @@ in hashes can be more space-efficient than simple k-v pair when there's lots of 
   data of these cards.
   For each game, there's a hash where the key is the unique card identifier and the value is the serialized card data.
 
+## Proxy
+AWS API Gateway has a large IP pool which can be utilised as a proxy to enable
+automatic IP rotation. 
+
+The `X-Forwarded-For` headers are automatically randomized. This is because
+each AWS API Gateway request attaches the client's true IP address in this header.
+
 ## Reference Documentation
 
 * [Scraping the Web in Golang with Colly and Goquery](https://benjamincongdon.me/blog/2018/03/01/Scraping-the-Web-in-Golang-with-Colly-and-Goquery/)
@@ -93,3 +100,4 @@ in hashes can be more space-efficient than simple k-v pair when there's lots of 
 * [Don’t eagerly fetch the user](https://gqlgen.com/getting-started/#dont-eagerly-fetch-the-user)
 * [Chromedp: Golang Headless Browser Tutorial 2023](https://www.zenrows.com/blog/chromedp)
 * [requests-ip-rotator](https://github.com/Ge0rg3/requests-ip-rotator/tree/main)
+* [AWS HTTP headers and Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html)
