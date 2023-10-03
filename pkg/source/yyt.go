@@ -3,13 +3,11 @@ package source
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
 	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	"github.com/jollyboss123/tcg_my-server/pkg/currency"
 	"github.com/jollyboss123/tcg_my-server/pkg/game"
-	"log"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -65,16 +63,6 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	)
 
 	extensions.RandomUserAgent(c)
-	proxyURL, err := y.ps.FetchProxyURL()
-	if err != nil {
-		log.Fatal(err)
-	}
-	//proxySwitcher, err := proxy.RoundRobinProxySwitcher("socks5://188.226.141.127:1080", "socks5://67.205.132.241:1080")
-	//proxySwitcher, err := cp.RoundRobinProxySwitcher(proxyURL)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//c.SetProxyFunc(proxySwitcher)
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "yuyu-tei.jp/*",
@@ -95,9 +83,10 @@ func (y *yyt) List(ctx context.Context, query, game string) ([]*Card, error) {
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
-		targetURL := r.URL.String()
-		escapedURL := url.PathEscape(targetURL)
-		newURL := fmt.Sprintf("%s/%s", proxyURL, escapedURL)
+		newURL, err := y.ps.RoundRobinProxy(ctx, r.URL.String())
+		if err != nil {
+			errCh <- err
+		}
 
 		r.URL, _ = url.Parse(newURL)
 

@@ -1,34 +1,47 @@
 package proxy
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/jollyboss123/tcg_my-server/config"
+	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"sync/atomic"
 )
 
 type service struct {
 	proxies []*apigateway.RestApi
-	session *session.Session
+	region  string
 	index   uint32
+	cache   *redis.Client
+	cfg     *config.Config
 	logger  *slog.Logger
 }
 
 type Service interface {
 	FetchProxyURL() (string, error)
+	RoundRobinProxy(ctx context.Context, targetURL string) (string, error)
 }
 
-func NewService(logger *slog.Logger) Service {
+func NewService(logger *slog.Logger, cache *redis.Client, cfg *config.Config) Service {
 	child := logger.With(slog.String("api", "proxy"))
 	return &service{
 		logger: child,
+		cache:  cache,
+		cfg:    cfg,
 	}
 }
 
-const region = "ap-southeast-1" //hardcoded to southeast for now
+const (
+	region = "ap-southeast-1" //hardcoded to southeast for now
+	key    = "proxy"
+)
+
 var (
 	ErrNoAPIGatewayInstances = errors.New("no api gateway instances found")
 	ErrEmptyTargetURL        = errors.New("target url given is empty")
@@ -64,9 +77,20 @@ func (s *service) FetchProxyURL() (string, error) {
 		"prod"), nil
 }
 
-// put in cache
-func (s *service) fetchProxies() ([]*apigateway.RestApi, error) {
+func (s *service) fetchProxies(ctx context.Context) ([]*apigateway.RestApi, error) {
 	emptyResult := make([]*apigateway.RestApi, 0)
+	var proxies []*apigateway.RestApi
+	val, err := s.cache.Get(ctx, key).Result()
+	if err != nil {
+		s.logger.Warn("get proxy cache", slog.String("error", err.Error()))
+	}
+	err = json.Unmarshal([]byte(val), &proxies)
+	if err == nil {
+		s.logger.Info("cache hit", slog.String("key", key))
+		return proxies, nil
+	}
+	s.logger.Info("cache miss", slog.String("key", key))
+
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
@@ -75,6 +99,7 @@ func (s *service) fetchProxies() ([]*apigateway.RestApi, error) {
 		return emptyResult, err
 	}
 
+	s.region = *sess.Config.Region
 	svc := apigateway.New(sess)
 
 	result, err := svc.GetRestApis(nil)
@@ -88,14 +113,29 @@ func (s *service) fetchProxies() ([]*apigateway.RestApi, error) {
 		return emptyResult, err
 	}
 
+	data, err := json.Marshal(result.Items)
+	if err == nil {
+		err = s.cache.Set(ctx, key, data, s.cfg.Cache.CacheTime).Err()
+		if err != nil {
+			s.logger.Warn("set proxy cache", slog.String("error", err.Error()))
+		}
+	}
+
 	return result.Items, nil
 }
 
-func (s *service) RoundRobinProxy(targetURL string) (string, error) {
+func (s *service) RoundRobinProxy(ctx context.Context, targetURL string) (string, error) {
 	if len(targetURL) == 0 {
+		s.logger.Error("check target url", slog.String("error", ErrEmptyTargetURL.Error()))
 		return "", ErrEmptyTargetURL
 	}
 
+	proxies, err := s.fetchProxies(ctx)
+	if err != nil {
+		s.logger.Error("fetch proxies", slog.String("error", err.Error()), slog.String("target", targetURL))
+		return "", err
+	}
+	s.proxies = proxies
 	index := atomic.AddUint32(&s.index, 1) - 1
 
 	if index%uint32(len(s.proxies)+1) == 0 {
@@ -106,6 +146,6 @@ func (s *service) RoundRobinProxy(targetURL string) (string, error) {
 
 	return fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s/%s",
 		*proxy.Id,
-		&s.session.Config.Region,
+		s.region,
 		"prod", targetURL), nil
 }

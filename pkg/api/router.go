@@ -66,7 +66,7 @@ func (s *Server) InitRouter() {
 }
 
 func (s *Server) proxyService() proxy.Service {
-	return proxy.NewService(s.log)
+	return proxy.NewService(s.log, s.cache, s.cfg)
 }
 
 func (s *Server) scrapeService() source.ScrapeService {
@@ -100,9 +100,9 @@ func (s *Server) gameService() game.Service {
 
 func (s *Server) detailService() source.DetailService {
 	services := map[string]source.DetailService{
-		game.YGO: detail.NewYGO(s.log, s.gameService()),
+		game.YGO: detail.NewYGO(s.log, s.gameService(), s.proxyService()),
 		game.OPC: detail.NewOPC(s.log, s.gameService()),
-		game.WS:  detail.NewWS(s.log, s.gameService()),
+		game.WS:  detail.NewWS(s.log, s.gameService(), s.proxyService()),
 	}
 
 	return detail.NewCachedDetailService(

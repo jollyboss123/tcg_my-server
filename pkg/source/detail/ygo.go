@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
+	"github.com/jollyboss123/tcg_my-server/pkg/api/proxy"
 	gg "github.com/jollyboss123/tcg_my-server/pkg/game"
 	"github.com/jollyboss123/tcg_my-server/pkg/source"
 	"log/slog"
@@ -19,13 +20,15 @@ import (
 type ygo struct {
 	logger *slog.Logger
 	gs     gg.Service
+	ps     proxy.Service
 }
 
-func NewYGO(logger *slog.Logger, gs gg.Service) source.DetailService {
+func NewYGO(logger *slog.Logger, gs gg.Service, ps proxy.Service) source.DetailService {
 	child := logger.With(slog.String("api", "detail-ygo"))
 	return &ygo{
 		logger: child,
 		gs:     gs,
+		ps:     ps,
 	}
 }
 
@@ -177,6 +180,13 @@ func (y *ygo) Fetch(ctx context.Context, code, game string) (*source.DetailInfo,
 	var mu sync.Mutex
 	numVisited := 0
 	c.OnRequest(func(r *colly.Request) {
+		newURL, err := y.ps.RoundRobinProxy(ctx, r.URL.String())
+		if err != nil {
+			errCh <- err
+		}
+
+		r.URL, _ = url.Parse(newURL)
+
 		mu.Lock()
 		numVisited++
 		mu.Unlock()
