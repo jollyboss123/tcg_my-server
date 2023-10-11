@@ -2,6 +2,7 @@
 ## explicit; go 1.18
 github.com/99designs/gqlgen
 github.com/99designs/gqlgen/api
+github.com/99designs/gqlgen/client
 github.com/99designs/gqlgen/codegen
 github.com/99designs/gqlgen/codegen/config
 github.com/99designs/gqlgen/codegen/templates
@@ -187,7 +188,6 @@ github.com/gobwas/ws/wsutil
 github.com/gocolly/colly/v2
 github.com/gocolly/colly/v2/debug
 github.com/gocolly/colly/v2/extensions
-github.com/gocolly/colly/v2/proxy
 github.com/gocolly/colly/v2/storage
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
