@@ -8,7 +8,11 @@ import (
 
 type Stub struct {
 	QueryResolver struct {
-		Cards func(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error)
+		Cards         func(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error)
+		Currency      func(ctx context.Context, code string) (*model.Currency, error)
+		ExchangeRate  func(ctx context.Context, base, to string) (*model.ExchangeRate, error)
+		ExchangeRates func(ctx context.Context) ([]*model.ExchangeRate, error)
+		Games         func(ctx context.Context) ([]*model.Game, error)
 	}
 }
 
@@ -29,23 +33,19 @@ func (r *stubQuery) Cards(ctx context.Context, query string, game model.GameCode
 }
 
 func (r *stubQuery) Currency(ctx context.Context, code string) (*model.Currency, error) {
-	//TODO implement me
-	panic("implement me")
+	return r.QueryResolver.Currency(ctx, code)
 }
 
 func (r *stubQuery) ExchangeRate(ctx context.Context, base string, to string) (*model.ExchangeRate, error) {
-	//TODO implement me
-	panic("implement me")
+	return r.QueryResolver.ExchangeRate(ctx, base, to)
 }
 
 func (r *stubQuery) ExchangeRates(ctx context.Context) ([]*model.ExchangeRate, error) {
-	//TODO implement me
-	panic("implement me")
+	return r.QueryResolver.ExchangeRates(ctx)
 }
 
 func (r *stubQuery) Games(ctx context.Context) ([]*model.Game, error) {
-	//TODO implement me
-	panic("implement me")
+	return r.QueryResolver.Games(ctx)
 }
 
 func (r *Stub) Query() resolver.QueryResolver {
