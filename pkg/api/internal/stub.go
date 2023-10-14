@@ -7,6 +7,9 @@ import (
 )
 
 type Stub struct {
+	CardResolver struct {
+		Detail func(ctx context.Context, obj *model.Card) (*model.DetailInfo, error)
+	}
 	QueryResolver struct {
 		Cards         func(ctx context.Context, query string, game model.GameCode) ([]*model.Card, error)
 		Currency      func(ctx context.Context, code string) (*model.Currency, error)
@@ -19,7 +22,7 @@ type Stub struct {
 type stubCard struct{ *Stub }
 
 func (r *stubCard) Detail(ctx context.Context, obj *model.Card) (*model.DetailInfo, error) {
-	return r.Detail(ctx, obj)
+	return r.CardResolver.Detail(ctx, obj)
 }
 
 func (r *Stub) Card() resolver.CardResolver {
